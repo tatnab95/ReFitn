@@ -1,7 +1,7 @@
 extends Control
 
-# Overlay for photo recognition: loading state, error message, and a review
-# form. Nothing is added to the diary until the user presses "Добавить".
+# Overlay for photo recognition: source choice, loading state, error message,
+# and a review form. Nothing is added to the diary until the user presses "Добавить".
 
 signal entry_confirmed(entry: Dictionary)
 
@@ -13,11 +13,16 @@ const FoodPhoto = preload("res://scripts/food_photo.gd")
 const SETTINGS_SCENE := "res://scenes/settings.tscn"
 
 var _photo: FoodPhoto
+var _center: CenterContainer
+var _scroll: ScrollContainer
+var _stack: VBoxContainer
+var _choice_box: VBoxContainer
 var _loading_box: VBoxContainer
 var _message_box: VBoxContainer
 var _review_box: VBoxContainer
 var _message_label: Label
 var _settings_button: Button
+var _app_settings_button: Button
 var _bar: ProgressBar
 var _bar_tween: Tween
 var _name_input: LineEdit
@@ -33,20 +38,62 @@ func _ready() -> void:
 	_photo.started.connect(_on_started)
 	_photo.succeeded.connect(_on_succeeded)
 	_photo.failed.connect(_on_failed)
+	_photo.permission_denied.connect(_on_permission_denied)
 	_build()
+
+
+func _process(_delta: float) -> void:
+	if not visible or _scroll == null or _stack == null or _center == null:
+		return
+	var kb_px := DisplayServer.virtual_keyboard_get_height() if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD) else 0
+	var kb_height := 0.0
+	var view_h := get_viewport_rect().size.y
+	if kb_px > 0:
+		var win_h := float(DisplayServer.window_get_size().y)
+		kb_height = (float(kb_px) * view_h / win_h) if win_h > 0.0 else float(kb_px)
+	_center.offset_bottom = -kb_height
+	var max_scroll_h := maxf(220.0, view_h - kb_height - 120.0)
+	var content_h := _stack.get_combined_minimum_size().y
+	var target_h := minf(content_h, max_scroll_h)
+	if not is_equal_approx(_scroll.custom_minimum_size.y, target_h):
+		_scroll.custom_minimum_size.y = target_h
 
 
 func open_photo() -> void:
 	if _photo.is_busy():
 		return
+	if not _check_ai_configured():
+		return
+	_show_box(_choice_box)
+
+
+func open_camera() -> void:
+	if _photo.is_busy():
+		return
+	if not _check_ai_configured():
+		return
+	visible = false
+	_photo.take_photo()
+
+
+func open_gallery() -> void:
+	if _photo.is_busy():
+		return
+	if not _check_ai_configured():
+		return
+	visible = false
+	_photo.pick_photo()
+
+
+func _check_ai_configured() -> bool:
 	var settings := AiSettings.load_settings()
 	if str(settings.api_key).is_empty():
-		_show_message(Texts.t("photo_no_key"), true)
-		return
+		_show_message(Texts.t("photo_no_key"), true, false)
+		return false
 	if str(settings.model).is_empty():
-		_show_message(Texts.t("photo_no_model"), true)
-		return
-	_photo.pick_photo()
+		_show_message(Texts.t("photo_no_model"), true, false)
+		return false
+	return true
 
 
 func _build() -> void:
@@ -56,25 +103,39 @@ func _build() -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dim)
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(center)
+	_center = CenterContainer.new()
+	_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_center)
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(900, 0)
-	center.add_child(panel)
+	_center.add_child(panel)
 
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 32)
 	panel.add_child(margin)
 
-	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 16)
-	margin.add_child(stack)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.follow_focus = true
+	margin.add_child(_scroll)
 
-	_loading_box = _make_box(stack)
+	_stack = VBoxContainer.new()
+	_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_stack.add_theme_constant_override("separation", 16)
+	_scroll.add_child(_stack)
+
+	_choice_box = _make_box(_stack)
+	_choice_box.add_child(_label(Texts.t("photo_button"), 36, ThemeColors.TEXT))
+	_choice_box.add_child(_action_button(Texts.t("photo_take"), open_camera, true))
+	_choice_box.add_child(_action_button(Texts.t("photo_gallery"), open_gallery, false))
+	_choice_box.add_child(_action_button(Texts.t("cancel"), close, false))
+
+	_loading_box = _make_box(_stack)
 	_loading_box.add_child(_label(Texts.t("photo_loading"), 36, ThemeColors.TEXT))
 	_bar = ProgressBar.new()
 	_bar.show_percentage = false
@@ -83,15 +144,17 @@ func _build() -> void:
 	_loading_box.add_child(_bar)
 	_loading_box.add_child(_action_button(Texts.t("cancel"), _on_cancel_pressed, false))
 
-	_message_box = _make_box(stack)
+	_message_box = _make_box(_stack)
 	_message_label = _label("", 30, ThemeColors.ERROR)
 	_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_message_box.add_child(_message_label)
 	_settings_button = _action_button(Texts.t("photo_open_settings"), _on_settings_pressed, true)
 	_message_box.add_child(_settings_button)
+	_app_settings_button = _action_button(Texts.t("photo_open_app_settings"), _on_app_settings_pressed, true)
+	_message_box.add_child(_app_settings_button)
 	_message_box.add_child(_action_button(Texts.t("photo_close"), close, false))
 
-	_review_box = _make_box(stack)
+	_review_box = _make_box(_stack)
 	_review_box.add_child(_label(Texts.t("photo_review_title"), 36, ThemeColors.TEXT))
 	var note := _label(Texts.t("photo_review_note"), 26, ThemeColors.GOLD_SOFT)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -99,6 +162,8 @@ func _build() -> void:
 	_name_input = LineEdit.new()
 	_name_input.placeholder_text = Texts.t("entry_name_placeholder")
 	_name_input.custom_minimum_size = Vector2(0, 90)
+	_name_input.virtual_keyboard_enabled = true
+	_name_input.virtual_keyboard_show_on_focus = true
 	_name_input.add_theme_font_size_override("font_size", 32)
 	_review_box.add_child(_name_input)
 	var grid := GridContainer.new()
@@ -110,6 +175,10 @@ func _build() -> void:
 		grid.add_child(_label(Texts.t(key), 30, ThemeColors.MUTED))
 		var input := LineEdit.new()
 		input.custom_minimum_size = Vector2(0, 80)
+		input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		input.virtual_keyboard_enabled = true
+		input.virtual_keyboard_show_on_focus = true
+		input.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_NUMBER
 		input.add_theme_font_size_override("font_size", 30)
 		input.text_changed.connect(_on_numeric_changed.bind(input))
 		grid.add_child(input)
@@ -155,14 +224,17 @@ func _action_button(text: String, handler: Callable, primary: bool) -> Button:
 
 func _show_box(box: Control) -> void:
 	visible = true
-	for child in [_loading_box, _message_box, _review_box]:
+	for child in [_choice_box, _loading_box, _message_box, _review_box]:
 		child.visible = child == box
+	if _scroll != null:
+		_scroll.scroll_vertical = 0
 
 
-func _show_message(text: String, to_settings: bool) -> void:
+func _show_message(text: String, to_settings: bool, to_app_settings: bool = false) -> void:
 	_stop_bar()
 	_message_label.text = text
 	_settings_button.visible = to_settings
+	_app_settings_button.visible = to_app_settings
 	_show_box(_message_box)
 
 
@@ -184,7 +256,15 @@ func _on_succeeded(result: Dictionary) -> void:
 
 
 func _on_failed(message: String) -> void:
-	_show_message(message, false)
+	_show_message(message, false, false)
+
+
+func _on_permission_denied(message: String) -> void:
+	_show_message(message, false, OS.get_name() == "Android")
+
+
+func _on_app_settings_pressed() -> void:
+	Notifier.open_settings()
 
 
 func _on_add_pressed() -> void:

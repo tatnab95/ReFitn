@@ -26,6 +26,7 @@ static func apply(root: Window) -> void:
 	if not _hooked:
 		_hooked = true
 		root.get_tree().node_added.connect(_on_node_added)
+	_walk_tree(root)
 
 
 static func resolve_dark(mode: String) -> bool:
@@ -113,6 +114,11 @@ static func build_theme() -> Theme:
 	theme.set_font_size("font_size", "Label", 32)
 	theme.set_color("font_color", "CheckButton", ThemeColors.TEXT)
 	theme.set_font_size("font_size", "CheckButton", 32)
+	theme.set_stylebox("panel", "PopupMenu", _box(ThemeColors.SURFACE, ThemeColors.GRID, 2, 16))
+	theme.set_stylebox("hover", "PopupMenu", _box(ThemeColors.SURFACE_HOVER, ThemeColors.TRANSPARENT, 0, 12))
+	theme.set_color("font_color", "PopupMenu", ThemeColors.TEXT)
+	theme.set_color("font_hover_color", "PopupMenu", ThemeColors.TEXT)
+	theme.set_font_size("font_size", "PopupMenu", 28)
 	return theme
 
 
@@ -151,6 +157,142 @@ static func _on_node_added(node: Node) -> void:
 		_apply_safe_area.call_deferred(node)
 	elif node is Control and node.get_parent() == node.get_tree().root:
 		_fade_in.call_deferred(node)
+	if node is ScrollContainer:
+		_setup_scroll.call_deferred(node)
+	elif node is Control:
+		_setup_scroll_child.call_deferred(node)
+
+
+static func _walk_tree(node: Node) -> void:
+	if node is Button:
+		_setup_button.call_deferred(node)
+	elif node is MarginContainer and node.name == "Margin":
+		_apply_safe_area.call_deferred(node)
+	if node is ScrollContainer:
+		_setup_scroll.call_deferred(node)
+	elif node is Control:
+		_setup_scroll_child.call_deferred(node)
+	for child in node.get_children():
+		_walk_tree(child)
+
+
+static func _setup_scroll(scroll: ScrollContainer) -> void:
+	if not is_instance_valid(scroll) or scroll.has_meta("scroll_hooked"):
+		return
+	scroll.set_meta("scroll_hooked", true)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.follow_focus = true
+	var watcher := _ScrollKeyboardWatcher.new(scroll)
+	watcher.name = "_ScrollKeyboardWatcher"
+	scroll.add_child(watcher)
+	for child in scroll.get_children():
+		_pass_mouse_in_scroll(child)
+
+
+static func _setup_scroll_child(control: Control) -> void:
+	if not is_instance_valid(control):
+		return
+	var parent := control.get_parent()
+	while parent != null:
+		if parent is ScrollContainer:
+			if control.mouse_filter == Control.MOUSE_FILTER_STOP:
+				control.mouse_filter = Control.MOUSE_FILTER_PASS
+			return
+		parent = parent.get_parent()
+
+
+static func _pass_mouse_in_scroll(node: Node) -> void:
+	if node is Control and not (node is ScrollBar):
+		var c := node as Control
+		if c.mouse_filter == Control.MOUSE_FILTER_STOP:
+			c.mouse_filter = Control.MOUSE_FILTER_PASS
+	for child in node.get_children():
+		_pass_mouse_in_scroll(child)
+
+
+class _ScrollKeyboardWatcher extends Node:
+	var _scroll: ScrollContainer
+	var _spacer: Control
+	var _last_kb_height := 0.0
+	var _last_focused: Control = null
+	var _pending_frames := 0
+
+	func _init(scroll: ScrollContainer) -> void:
+		_scroll = scroll
+
+	func _process(_delta: float) -> void:
+		if not is_instance_valid(_scroll) or not _scroll.is_visible_in_tree():
+			return
+		var content := _get_content()
+		if content == null:
+			return
+		var kb_px := DisplayServer.virtual_keyboard_get_height() if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD) else 0
+		var kb_height := 0.0
+		if kb_px > 0:
+			var win_h := float(DisplayServer.window_get_size().y)
+			var view_h := _scroll.get_viewport_rect().size.y
+			kb_height = (float(kb_px) * view_h / win_h) if win_h > 0.0 else float(kb_px)
+
+		var focused := _scroll.get_viewport().gui_get_focus_owner()
+		var focused_in_scroll := focused != null and _scroll.is_ancestor_of(focused)
+
+		var target_spacer := 0.0
+		if kb_height > 0.0 and focused_in_scroll:
+			var view_h := _scroll.get_viewport_rect().size.y
+			var scroll_bottom := _scroll.get_global_rect().end.y
+			var below_scroll := maxf(0.0, view_h - scroll_bottom)
+			target_spacer = maxf(0.0, kb_height - below_scroll + 36.0)
+
+		_ensure_spacer(content, target_spacer)
+
+		if focused_in_scroll and (focused != _last_focused or not is_equal_approx(kb_height, _last_kb_height)):
+			_pending_frames = 3
+		_last_focused = focused if focused_in_scroll else null
+		_last_kb_height = kb_height
+
+		if _pending_frames > 0 and focused_in_scroll:
+			_pending_frames -= 1
+			_scroll_to_control(focused, kb_height)
+
+	func _get_content() -> Control:
+		for child in _scroll.get_children():
+			if child is Control and not (child is ScrollBar):
+				return child as Control
+		return null
+
+	func _ensure_spacer(content: Control, target_height: float) -> void:
+		if target_height <= 0.0:
+			if _spacer != null and is_instance_valid(_spacer):
+				_spacer.visible = false
+				_spacer.custom_minimum_size = Vector2.ZERO
+			return
+		if _spacer == null or not is_instance_valid(_spacer):
+			_spacer = Control.new()
+			_spacer.name = "_KeyboardSpacer"
+			_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			content.add_child(_spacer)
+		if _spacer.get_parent() == content and _spacer.get_index() != content.get_child_count() - 1:
+			content.move_child(_spacer, content.get_child_count() - 1)
+		_spacer.visible = true
+		_spacer.custom_minimum_size = Vector2(0.0, target_height)
+
+	func _scroll_to_control(focused: Control, kb_height: float) -> void:
+		if not is_instance_valid(focused):
+			return
+		var view_h := _scroll.get_viewport_rect().size.y
+		var scroll_rect := _scroll.get_global_rect()
+		var visible_top := scroll_rect.position.y + 16.0
+		var visible_bottom := scroll_rect.end.y - 16.0
+		if kb_height > 0.0:
+			visible_bottom = minf(visible_bottom, view_h - kb_height - 24.0)
+		if visible_bottom <= visible_top:
+			return
+		var f_rect := focused.get_global_rect()
+		if f_rect.end.y > visible_bottom:
+			_scroll.scroll_vertical += int(ceil(f_rect.end.y - visible_bottom))
+		elif f_rect.position.y < visible_top:
+			_scroll.scroll_vertical = maxi(0, _scroll.scroll_vertical - int(ceil(visible_top - f_rect.position.y)))
 
 
 static func _setup_button(button: Button) -> void:

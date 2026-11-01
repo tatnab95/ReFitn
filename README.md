@@ -43,16 +43,16 @@
 В Godot: `Editor → Manage Export Templates → Download and Install`.  
 Либо скачать шаблоны с сайта Godot и положить в стандартную папку экспортных шаблонов.
 
-### 2. Android build template и плагин уведомлений
+### 2. Android build template и плагины Android
 
-Плагин уведомлений (`addons/NotificationSchedulerPlugin`, MIT, Godot Mobile Plugins, v6.0 для Godot 4.7) собирается через Gradle. Поэтому в экспорте включён `gradle_build/use_gradle_build=true` и `plugins/NotificationSchedulerPlugin=true`. Для этого нужно один раз:
+Плагины уведомлений (`addons/NotificationSchedulerPlugin`, MIT, Godot Mobile Plugins, v6.0) и камеры (`addons/GodotGetImage`, MIT, Lamelynx, v0.2) собираются через Gradle. Поэтому в экспорте включён `gradle_build/use_gradle_build=true`, `plugins/NotificationSchedulerPlugin=true` и `plugins/GodotGetImage=true`. Для этого нужно один раз:
 
 1. `Project → Install Android Build Template` (создаст папку `android/build/`, она не хранится в git).
 2. Скопировать иконку уведомления: `android_res/drawable/ic_refitn_notification.xml` → `android/build/res/drawable/`.
-3. Файлы `android/plugins/NotificationSchedulerPlugin.gdap` и `*.aar` уже в репозитории. Ничего копировать не нужно.
+3. Файлы `android/plugins/*.gdap` и `*.aar` обоих плагинов уже в репозитории. Ничего дополнительно скачивать или копировать не нужно.
 
 На Windows шаги те же, пути через `\`. Без шага 2 APK не соберётся (нет маленькой иконки для уведомления).
-Лицензия плагина: `addons/NotificationSchedulerPlugin/LICENSE.txt`.
+Лицензии плагинов: `addons/NotificationSchedulerPlugin/LICENSE.txt`, `addons/GodotGetImage/LICENSE.txt`.
 
 ### 2b. Настроить Android SDK
 
@@ -81,7 +81,7 @@ Keystore и пароли **не коммитить**. В Export-диалоге �
 - имя: `ReFitn`;
 - архитектура: `arm64-v8a`;
 - портретная ориентация;
-- разрешения `VIBRATE` и `INTERNET` (для распознавания по фото);
+- разрешения `VIBRATE`, `INTERNET` и `CAMERA` (для распознавания еды по фото и съёмки камерой);
 - путь: `build/refitn.apk`.
 
 Нажать `Export Project` (для теста подойдёт debug APK, он подписывается debug-ключом).
@@ -168,8 +168,9 @@ scripts/
   rest_ring.gd          # кольцо прогресса отдыха
 addons/
   NotificationSchedulerPlugin/   # MIT, локальные уведомления (Android)
-  GMPShared/                     # зависимость плагина
-android/plugins/        # .gdap и .aar плагина уведомлений
+  GodotGetImage/                 # MIT, съёмка фото системной камерой (Android)
+  GMPShared/                     # зависимость плагина уведомлений
+android/plugins/        # .gdap и .aar плагинов уведомлений и камеры
 android_res/drawable/   # иконка уведомления (копируется в android/build/res)
 icon.svg, icon_foreground.svg, icon_background.svg  # иконка и адаптивная иконка
 export_presets.cfg      # Android APK, com.tatnab.refitn

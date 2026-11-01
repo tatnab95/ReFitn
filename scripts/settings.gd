@@ -31,6 +31,8 @@ const ReminderPanel = preload("res://scripts/reminder_panel.gd")
 @onready var save_button: Button = $Margin/MainVBox/Scroll/Content/SaveButton
 @onready var status_label: Label = $Margin/MainVBox/Status
 
+var _ai_panel: Control = null
+
 
 func _ready() -> void:
 	background.color = ThemeColors.BG
@@ -70,6 +72,7 @@ func _ready() -> void:
 	var ai_panel := AiSettingsPanel.new()
 	content.add_child(ai_panel)
 	content.move_child(ai_panel, save_button.get_index())
+	_ai_panel = ai_panel
 
 
 func _load_values() -> void:
@@ -99,6 +102,8 @@ func _save_values(show_status: bool) -> void:
 	})
 	Storage.set_steps(_number(reps_step_input), _number(rest_step_input))
 	Storage.set_feedback(sound_check.button_pressed, vibration_check.button_pressed)
+	if _ai_panel != null and _ai_panel.has_method("save_silent"):
+		_ai_panel.save_silent()
 	if show_status:
 		status_label.text = Texts.t("settings_saved")
 		status_label.add_theme_color_override("font_color", ThemeColors.GREEN_BRIGHT)

@@ -1,0 +1,11 @@
+[config]
+
+name="GodotGetImage"
+binary_type="local"
+binary="GodotGetImage-release.aar"
+
+[dependencies]
+
+local=[]
+remote=[]
+custom_maven_repos=[]
