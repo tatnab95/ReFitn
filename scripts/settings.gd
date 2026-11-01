@@ -3,6 +3,8 @@ extends Control
 const Texts = preload("res://scripts/texts.gd")
 const ThemeColors = preload("res://scripts/theme_colors.gd")
 const AiSettingsPanel = preload("res://scripts/ai_settings_panel.gd")
+const AppearancePanel = preload("res://scripts/appearance_panel.gd")
+const ReminderPanel = preload("res://scripts/reminder_panel.gd")
 
 @onready var background: ColorRect = $Background
 @onready var back_button: Button = $Margin/MainVBox/Header/BackButton
@@ -58,6 +60,13 @@ func _ready() -> void:
 
 	_load_values()
 	var content := save_button.get_parent()
+	var appearance := AppearancePanel.new()
+	content.add_child(appearance)
+	content.move_child(appearance, save_button.get_index())
+	appearance.palette_changed.connect(func() -> void: background.color = ThemeColors.BG)
+	var reminder := ReminderPanel.new()
+	content.add_child(reminder)
+	content.move_child(reminder, save_button.get_index())
 	var ai_panel := AiSettingsPanel.new()
 	content.add_child(ai_panel)
 	content.move_child(ai_panel, save_button.get_index())

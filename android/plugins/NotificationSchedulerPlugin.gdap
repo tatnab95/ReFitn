@@ -1,0 +1,11 @@
+[config]
+
+name="NotificationSchedulerPlugin"
+binary_type="local"
+binary="NotificationSchedulerPlugin-release.aar"
+
+[dependencies]
+
+local=[]
+remote=[]
+custom_maven_repos=[]

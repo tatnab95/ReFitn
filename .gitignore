@@ -2,7 +2,7 @@
 .godot/
 
 # Android build output and local export credentials
-/android/
+/android/build/
 /build/
 *.apk
 *.aab

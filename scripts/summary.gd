@@ -1,6 +1,7 @@
 extends Control
 
 const Texts = preload("res://scripts/texts.gd")
+const ThemeColors = preload("res://scripts/theme_colors.gd")
 
 @onready var title_label: Label = $Margin/MainVBox/Title
 @onready var exercise_label: Label = $Margin/MainVBox/Exercise
@@ -26,6 +27,9 @@ func _ready() -> void:
 	rest_caption.text = Texts.t("summary_rest")
 	done_button.text = Texts.t("done")
 	done_button.pressed.connect(_on_done_pressed)
+	done_button.theme_type_variation = &"SuccessButton"
+	for value_label in [sets_value, reps_value, total_value, work_value, rest_value]:
+		value_label.add_theme_color_override("font_color", ThemeColors.GOLD)
 
 	var data: Dictionary = Storage.last_summary
 	var sets := int(data.get("sets", 0))

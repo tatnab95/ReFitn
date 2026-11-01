@@ -19,6 +19,8 @@
 - Экран не гаснет во время тренировки (`DisplayServer.screen_set_keep_on`).
 - Таймер отдыха считается по `Time.get_ticks_msec()`, а не по `delta`, поэтому переживает сворачивание приложения.
 - Данные сохраняются после каждого подхода.
+- Тёмная и светлая тема, «Как в системе» (настройки → Тема).
+- Уведомления на Android: конец отдыха (даже при выключенном экране) и ежедневное напоминание о серии (настройки → Напоминание).
 
 ## Требования
 
@@ -41,7 +43,18 @@
 В Godot: `Editor → Manage Export Templates → Download and Install`.  
 Либо скачать шаблоны с сайта Godot и положить в стандартную папку экспортных шаблонов.
 
-### 2. Настроить Android SDK
+### 2. Android build template и плагин уведомлений
+
+Плагин уведомлений (`addons/NotificationSchedulerPlugin`, MIT, Godot Mobile Plugins, v6.0 для Godot 4.7) собирается через Gradle. Поэтому в экспорте включён `gradle_build/use_gradle_build=true` и `plugins/NotificationSchedulerPlugin=true`. Для этого нужно один раз:
+
+1. `Project → Install Android Build Template` (создаст папку `android/build/`, она не хранится в git).
+2. Скопировать иконку уведомления: `android_res/drawable/ic_refitn_notification.xml` → `android/build/res/drawable/`.
+3. Файлы `android/plugins/NotificationSchedulerPlugin.gdap` и `*.aar` уже в репозитории. Ничего копировать не нужно.
+
+На Windows шаги те же, пути через `\`. Без шага 2 APK не соберётся (нет маленькой иконки для уведомления).
+Лицензия плагина: `addons/NotificationSchedulerPlugin/LICENSE.txt`.
+
+### 2b. Настроить Android SDK
 
 На Linux путь задаётся в `Editor → Editor Settings → Export → Android`. Примеры путей для Linux:
 
@@ -99,7 +112,7 @@ adb install -r build/refitn.apk
 Всё лежит в `user://`:
 
 - `user://workouts.json` — тренировки;
-- `user://settings.json` — повторения и отдых для каждого упражнения, цели, шаги, звук и вибрация;
+- `user://settings.json` — повторения и отдых для каждого упражнения, цели, шаги, звук, вибрация, тема и напоминание;
 - `user://nutrition.json` — записи питания и вода по дням.
 
 Примерные пути:
@@ -146,8 +159,19 @@ scripts/
   ai_settings_panel.gd  # блок «Распознавание по фото» в настройках
   food_photo.gd         # фото → base64 → запрос к API → КБЖУ
   food_photo_dialog.gd  # окно загрузки, ошибок и проверки результата
-resources/
-  theme.tres            # тёмная тема, крупные контролы
+  theme_colors.gd       # палитры (тёмная и светлая), все цвета приложения
+  theme_builder.gd      # собирает Theme из палитры, анимации нажатия, отступы под вырез
+  appearance_panel.gd   # выбор темы в настройках
+  reminder_panel.gd     # напоминание о серии в настройках
+  notifier.gd           # автолоад Notifier: уведомления об отдыхе и ежедневное напоминание
+  segment_bar.gd        # сегментированный переключатель вкладок статистики
+  rest_ring.gd          # кольцо прогресса отдыха
+addons/
+  NotificationSchedulerPlugin/   # MIT, локальные уведомления (Android)
+  GMPShared/                     # зависимость плагина
+android/plugins/        # .gdap и .aar плагина уведомлений
+android_res/drawable/   # иконка уведомления (копируется в android/build/res)
+icon.svg, icon_foreground.svg, icon_background.svg  # иконка и адаптивная иконка
 export_presets.cfg      # Android APK, com.tatnab.refitn
 project.godot
 README.md

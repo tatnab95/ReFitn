@@ -43,7 +43,7 @@ func refresh() -> void:
 	var record_values := []
 	for day in range(start, today + 1):
 		var civil := Streak.civil_from_days(day)
-		labels.append("%d.%d" % [int(civil.day), int(civil.month)])
+		labels.append("%02d.%02d" % [int(civil.day), int(civil.month)])
 		reps_values.append(0)
 		time_values.append(0)
 		record_values.append(0)

@@ -12,6 +12,7 @@ var today_number := 0
 
 
 func _ready() -> void:
+	add_to_group("themed")
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(0, 470)
 	queue_redraw()

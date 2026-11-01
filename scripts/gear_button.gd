@@ -7,6 +7,7 @@ var _pressed := false
 
 
 func _ready() -> void:
+	add_to_group("themed")
 	text = ""
 	focus_mode = Control.FOCUS_NONE
 	mouse_entered.connect(_on_hover.bind(true))

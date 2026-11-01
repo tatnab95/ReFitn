@@ -1,6 +1,8 @@
 extends Control
 
 const Texts = preload("res://scripts/texts.gd")
+const ThemeColors = preload("res://scripts/theme_colors.gd")
+const RestRing = preload("res://scripts/rest_ring.gd")
 
 enum Phase { APPROACH, REST }
 
@@ -58,6 +60,8 @@ var session_finished := false
 var phase_started_ms := 0
 var rest_started_ms := 0
 var rest_end_ms := 0
+var rest_total_ms := 0
+var rest_ring: Control
 var last_countdown := -1
 
 var editing_field := ""
@@ -78,6 +82,7 @@ func _ready() -> void:
 
 	title_label.text = Texts.exercise_name(exercise_id)
 	_apply_texts()
+	_style_screen()
 	_connect_signals()
 	_update_labels()
 	_show_approach()
@@ -85,6 +90,53 @@ func _ready() -> void:
 	beep_player.stream = _make_beep_stream()
 	DisplayServer.screen_set_keep_on(true)
 	set_process(false)
+
+
+func _style_screen() -> void:
+	reps_value.flat = true
+	reps_value.add_theme_font_size_override("font_size", 200)
+	reps_value.add_theme_color_override("font_color", ThemeColors.GOLD)
+	reps_value.add_theme_color_override("font_hover_color", ThemeColors.GOLD)
+	reps_value.add_theme_color_override("font_pressed_color", ThemeColors.GOLD)
+	rest_value.flat = true
+	rest_value.add_theme_font_size_override("font_size", 56)
+	rest_value.add_theme_color_override("font_color", ThemeColors.GOLD)
+	rest_value.add_theme_color_override("font_hover_color", ThemeColors.GOLD)
+	rest_value.add_theme_color_override("font_pressed_color", ThemeColors.GOLD)
+	for button in [reps_minus, reps_plus, rest_minus, rest_plus]:
+		button.theme_type_variation = &"RoundButton"
+		button.custom_minimum_size = Vector2(120, 120)
+		button.add_theme_font_size_override("font_size", 64)
+	set_done_button.theme_type_variation = &"SuccessButton"
+	skip_rest_button.theme_type_variation = &"SuccessButton"
+	finish_button.theme_type_variation = &"DangerButton"
+	finish_button.set_meta("compact", true)
+	finish_button.custom_minimum_size = Vector2(0, 80)
+	finish_button.add_theme_font_size_override("font_size", 30)
+	_build_ring()
+
+
+func _build_ring() -> void:
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(560, 560)
+	holder.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	rest_view.add_child(holder)
+	rest_view.move_child(holder, countdown_label.get_index())
+	rest_ring = RestRing.new()
+	rest_ring.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	holder.add_child(rest_ring)
+	rest_view.remove_child(countdown_label)
+	holder.add_child(countdown_label)
+	countdown_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	countdown_label.custom_minimum_size = Vector2.ZERO
+	countdown_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func _update_ring(remaining_ms: int) -> void:
+	if rest_ring == null or rest_total_ms <= 0:
+		return
+	var fraction := float(maxi(0, remaining_ms)) / float(rest_total_ms)
+	rest_ring.set_progress(fraction, int(ceil(maxi(0, remaining_ms) / 1000.0)))
 
 
 func _apply_texts() -> void:
@@ -180,6 +232,7 @@ func _on_set_done() -> void:
 	_ensure_workout_started()
 	_save_progress()
 	_update_labels()
+	Notifier.refresh_daily()
 
 	if rest_seconds <= 0:
 		phase = Phase.REST
@@ -191,11 +244,13 @@ func _on_set_done() -> void:
 	phase = Phase.REST
 	rest_started_ms = now
 	rest_end_ms = now + rest_seconds * 1000
+	rest_total_ms = rest_seconds * 1000
 	next_set_label.text = Texts.t("next_set") % reps
 	last_countdown = -1
 	approach_view.visible = false
 	rest_view.visible = true
 	_update_countdown()
+	Notifier.schedule_rest(rest_seconds)
 	set_process(true)
 
 
@@ -207,6 +262,7 @@ func _process(_delta: float) -> void:
 	if remaining <= 0:
 		_finish_rest()
 		return
+	_update_ring(remaining)
 
 	var seconds_left := int(ceil(remaining / 1000.0))
 	if seconds_left != last_countdown:
@@ -216,6 +272,7 @@ func _process(_delta: float) -> void:
 
 func _update_countdown() -> void:
 	var remaining := maxi(0, rest_end_ms - Time.get_ticks_msec())
+	_update_ring(remaining)
 	var seconds_left := int(ceil(remaining / 1000.0))
 	last_countdown = seconds_left
 	countdown_label.text = Texts.format_time(seconds_left)
@@ -232,6 +289,7 @@ func _finish_rest() -> void:
 	phase_started_ms = now
 	_show_approach()
 	_save_progress()
+	Notifier.cancel_rest()
 	_play_alert()
 	_maybe_show_prompt()
 
@@ -239,6 +297,7 @@ func _finish_rest() -> void:
 func _on_skip_rest() -> void:
 	if phase != Phase.REST:
 		return
+	Notifier.cancel_rest()
 
 	var now := Time.get_ticks_msec()
 	rest_ms += maxi(0, now - rest_started_ms)
@@ -407,5 +466,6 @@ func _notification(what: int) -> void:
 
 
 func _exit_tree() -> void:
+	Notifier.cancel_rest()
 	set_process(false)
 	DisplayServer.screen_set_keep_on(false)

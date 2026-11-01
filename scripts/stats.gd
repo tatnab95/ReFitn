@@ -1,6 +1,7 @@
 extends Control
 
 const Texts = preload("res://scripts/texts.gd")
+const SegmentBar = preload("res://scripts/segment_bar.gd")
 const ThemeColors = preload("res://scripts/theme_colors.gd")
 
 enum Period { DAY, WEEK, MONTH }
@@ -41,6 +42,12 @@ func _ready() -> void:
 	recent_title.text = Texts.t("recent_title")
 	export_button.text = Texts.t("export")
 	import_button.text = Texts.t("import")
+	export_button.theme_type_variation = &"SecondaryButton"
+	import_button.theme_type_variation = &"SecondaryButton"
+	var segments := SegmentBar.new()
+	tabs.get_parent().add_child(segments)
+	tabs.get_parent().move_child(segments, tabs.get_index())
+	segments.setup(tabs, [Texts.t("tab_overview"), Texts.t("tab_graphs"), Texts.t("tab_summary"), Texts.t("tab_macros")])
 
 	back_button.pressed.connect(_on_back_pressed)
 	day_button.pressed.connect(_set_period.bind(Period.DAY))

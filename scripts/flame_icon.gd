@@ -3,12 +3,13 @@ extends Control
 const ThemeColors = preload("res://scripts/theme_colors.gd")
 
 @export var fill_color: Color = ThemeColors.GOLD
-@export var outline_color: Color = Color(0, 0, 0, 0)
+@export var outline_color: Color = ThemeColors.TRANSPARENT
 @export var outline_width: float = 0.0
-@export var inner_color: Color = Color(1, 1, 1, 0)
+@export var inner_color: Color = ThemeColors.TRANSPARENT
 
 
 func _ready() -> void:
+	add_to_group("themed")
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	queue_redraw()
 
@@ -24,7 +25,7 @@ func _draw() -> void:
 	draw_flame(self, Rect2(Vector2.ZERO, size), fill_color, outline_color, outline_width, inner_color)
 
 
-static func draw_flame(canvas: CanvasItem, rect: Rect2, fill: Color, outline: Color = Color(0, 0, 0, 0), width: float = 0.0, inner: Color = Color(1, 1, 1, 0)) -> void:
+static func draw_flame(canvas: CanvasItem, rect: Rect2, fill: Color, outline: Color = ThemeColors.TRANSPARENT, width: float = 0.0, inner: Color = ThemeColors.TRANSPARENT) -> void:
 	var points := flame_points(rect)
 	canvas.draw_colored_polygon(points, fill)
 	if width > 0.0 and outline.a > 0.0:

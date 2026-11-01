@@ -150,6 +150,28 @@ const RU = {
 	"settings_saved": "Настройки сохранены",
 	"enter_number": "Введите число",
 
+	"today_reps_format": "Сегодня: %d",
+
+	"theme_title": "Тема",
+	"theme_dark": "Тёмная",
+	"theme_light": "Светлая",
+	"theme_system": "Как в системе",
+
+	"reminder_title": "Напоминание",
+	"reminder_enabled": "Ежедневное напоминание",
+	"reminder_time_format": "Время: %02d:%02d",
+	"notif_channel_name": "Отдых и напоминания",
+	"notif_channel_desc": "Конец отдыха и ежедневное напоминание о серии",
+	"notif_rest_title": "Отдых закончился",
+	"notif_rest_text": "Пора к следующему подходу",
+	"notif_daily_title": "Не потеряй серию",
+	"notif_daily_text": "Серия: %d %s. Сегодня ещё можно засчитать",
+	"notif_daily_start": "Начни серию сегодня",
+	"notif_rationale": "Разрешите уведомления, чтобы сообщать о конце отдыха и напоминать о серии",
+	"notif_denied_hint": "Уведомления запрещены. Включите их в настройках телефона",
+	"notif_open_settings": "Открыть настройки",
+	"notif_unsupported": "Уведомления работают только на Android",
+
 	"ai_title": "Распознавание по фото",
 	"ai_key_label": "API-ключ",
 	"ai_url_label": "Адрес API",

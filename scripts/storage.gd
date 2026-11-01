@@ -2,6 +2,7 @@ extends Node
 
 const Texts = preload("res://scripts/texts.gd")
 const Streak = preload("res://scripts/streak.gd")
+const ThemeBuilder = preload("res://scripts/theme_builder.gd")
 
 const WORKOUTS_PATH := "user://workouts.json"
 const SETTINGS_PATH := "user://settings.json"
@@ -39,6 +40,7 @@ func _ready() -> void:
 		save_workouts()
 	if not FileAccess.file_exists(NUTRITION_PATH):
 		save_nutrition()
+	ThemeBuilder.apply(get_tree().root)
 
 
 func load_all() -> void:
@@ -134,7 +136,33 @@ func save_settings() -> void:
 		},
 		"sound_enabled": get_sound_enabled(),
 		"vibration_enabled": get_vibration_enabled(),
+		"theme_mode": get_theme_mode(),
+		"reminder_enabled": get_reminder_enabled(),
+		"reminder_minutes": get_reminder_minutes(),
 	})
+
+
+func get_theme_mode() -> String:
+	return str(settings.get("theme_mode", "dark"))
+
+
+func set_theme_mode(mode: String) -> void:
+	settings["theme_mode"] = mode if mode in ["dark", "light", "system"] else "dark"
+	save_settings()
+
+
+func get_reminder_enabled() -> bool:
+	return bool(settings.get("reminder_enabled", false))
+
+
+func get_reminder_minutes() -> int:
+	return clampi(int(settings.get("reminder_minutes", 1200)), 0, 1439)
+
+
+func set_reminder(enabled: bool, minutes: int) -> void:
+	settings["reminder_enabled"] = enabled
+	settings["reminder_minutes"] = clampi(minutes, 0, 1439)
+	save_settings()
 
 
 func save_workouts() -> void:
@@ -583,6 +611,9 @@ func _sanitize_settings(raw: Variant) -> Dictionary:
 		"steps": {"reps": DEFAULT_REPS_STEP, "rest": DEFAULT_REST_STEP},
 		"sound_enabled": true,
 		"vibration_enabled": true,
+		"theme_mode": "dark",
+		"reminder_enabled": false,
+		"reminder_minutes": 1200,
 	}
 	for exercise in Texts.EXERCISES:
 		var exercise_id := str(exercise.id)
@@ -609,6 +640,9 @@ func _sanitize_settings(raw: Variant) -> Dictionary:
 
 	result.sound_enabled = bool(raw_dict.get("sound_enabled", true))
 	result.vibration_enabled = bool(raw_dict.get("vibration_enabled", true))
+	result.theme_mode = str(raw_dict.get("theme_mode", "dark"))
+	result.reminder_enabled = bool(raw_dict.get("reminder_enabled", false))
+	result.reminder_minutes = clampi(int(raw_dict.get("reminder_minutes", 1200)), 0, 1439)
 	return result
 
 

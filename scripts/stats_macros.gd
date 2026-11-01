@@ -41,7 +41,7 @@ func refresh() -> void:
 	for day in range(start, today + 1):
 		var civil := Streak.civil_from_days(day)
 		var day_key := "%04d-%02d-%02d" % [int(civil.year), int(civil.month), int(civil.day)]
-		labels.append("%d.%d" % [int(civil.day), int(civil.month)])
+		labels.append("%02d.%02d" % [int(civil.day), int(civil.month)])
 		var totals := Storage.get_day_totals(day_key)
 		calories_values.append(int(totals.get("calories", 0)))
 		total_calories += int(totals.get("calories", 0))

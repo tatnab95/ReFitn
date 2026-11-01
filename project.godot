@@ -15,12 +15,13 @@ config/version="1.0.0"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
-boot_splash/bg_color=Color(0.0627451, 0.0745098, 0.101961, 1)
+boot_splash/bg_color=Color(0.0392157, 0.0627451, 0.121569, 1)
 boot_splash/show_image=false
 
 [autoload]
 
 Storage="*res://scripts/storage.gd"
+Notifier="*res://scripts/notifier.gd"
 
 [display]
 
@@ -31,10 +32,6 @@ window/size/window_height_override=960
 window/handheld/orientation=1
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-
-[gui]
-
-theme/custom="res://resources/theme.tres"
 
 [rendering]
 

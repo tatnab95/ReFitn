@@ -101,7 +101,7 @@ static func days_from_civil(year: int, month: int, day: int) -> int:
 		y -= 1
 	var era := int(floor(float(y) / 400.0))
 	var yoe := y - era * 400
-	var shifted_month := month + (3 if month > 2 else -9)
+	var shifted_month := month + (-3 if month > 2 else 9)
 	var doy := int(floor(float(153 * shifted_month + 2) / 5.0)) + day - 1
 	var doe := yoe * 365 + int(floor(float(yoe) / 4.0)) - int(floor(float(yoe) / 100.0)) + doy
 	return era * 146097 + doe - 719468

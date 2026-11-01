@@ -10,6 +10,7 @@ var bar_color: Color = ThemeColors.GREEN
 
 
 func _ready() -> void:
+	add_to_group("themed")
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(0, 72)
 	resized.connect(queue_redraw)
