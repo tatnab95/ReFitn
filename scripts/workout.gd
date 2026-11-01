@@ -40,10 +40,13 @@ enum Phase { APPROACH, REST }
 var exercise_id := "pullups"
 var reps := 10
 var rest_seconds := 120
+var reps_step := 1
+var rest_step := 10
 
 var phase := Phase.APPROACH
 var sets_done := 0
 var total_reps := 0
+var set_reps: Array = []
 var work_ms := 0
 var rest_ms := 0
 var next_prompt_at := 5
@@ -68,6 +71,8 @@ func _ready() -> void:
 
 	reps = Storage.get_reps(exercise_id)
 	rest_seconds = Storage.get_rest(exercise_id)
+	reps_step = Storage.get_reps_step()
+	rest_step = Storage.get_rest_step()
 	workout_started_unix = int(Time.get_unix_time_from_system())
 	phase_started_ms = Time.get_ticks_msec()
 
@@ -84,6 +89,10 @@ func _ready() -> void:
 
 func _apply_texts() -> void:
 	finish_button.text = Texts.t("finish")
+	reps_minus.text = "−"
+	reps_plus.text = "+"
+	rest_minus.text = "−"
+	rest_plus.text = "+"
 	reps_caption.text = Texts.t("reps_caption")
 	rest_caption.text = Texts.t("rest_caption")
 	hint_label.text = Texts.t("rest_hint")
@@ -117,7 +126,7 @@ func _connect_signals() -> void:
 func _change_reps(delta: int) -> void:
 	if phase != Phase.APPROACH:
 		return
-	reps = clampi(reps + delta, 1, 999)
+	reps = clampi(reps + delta * reps_step, 1, 999)
 	Storage.set_reps(exercise_id, reps)
 	_update_labels()
 
@@ -125,7 +134,7 @@ func _change_reps(delta: int) -> void:
 func _change_rest(delta: int) -> void:
 	if phase != Phase.APPROACH:
 		return
-	rest_seconds = clampi(rest_seconds + delta * 10, 0, 3600)
+	rest_seconds = clampi(rest_seconds + delta * rest_step, 0, 3600)
 	Storage.set_rest(exercise_id, rest_seconds)
 	_update_labels()
 
@@ -166,6 +175,7 @@ func _on_set_done() -> void:
 	work_ms += maxi(0, now - phase_started_ms)
 	sets_done += 1
 	total_reps += reps
+	set_reps.append(reps)
 
 	_ensure_workout_started()
 	_save_progress()
@@ -332,6 +342,7 @@ func _on_finish_pressed() -> void:
 		Storage.finish_workout(workout_id, {
 			"sets": sets_done,
 			"reps": total_reps,
+			"set_reps": set_reps,
 			"work_seconds": work_seconds,
 			"rest_seconds": rest_seconds_total,
 			"duration_seconds": work_seconds + rest_seconds_total,
@@ -354,6 +365,7 @@ func _save_progress() -> void:
 	Storage.update_workout(workout_id, {
 		"sets": sets_done,
 		"reps": total_reps,
+		"set_reps": set_reps,
 		"work_seconds": work_seconds,
 		"rest_seconds": rest_seconds_total,
 		"duration_seconds": work_seconds + rest_seconds_total,
@@ -361,8 +373,10 @@ func _save_progress() -> void:
 
 
 func _play_alert() -> void:
-	beep_player.play()
-	Input.vibrate_handheld(400)
+	if Storage.get_sound_enabled():
+		beep_player.play()
+	if Storage.get_vibration_enabled():
+		Input.vibrate_handheld(400)
 
 
 func _make_beep_stream() -> AudioStreamWAV:

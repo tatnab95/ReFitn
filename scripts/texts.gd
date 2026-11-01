@@ -11,11 +11,24 @@ const EXERCISES = [
 	{"id": "muscle_up_2", "name": "Выход на 2"},
 ]
 
+const WEEKDAYS_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+const MONTHS = [
+	"Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+	"Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+]
+
 const RU = {
 	"app_title": "ReFitn",
 	"app_subtitle": "Тренировки с таймером отдыха",
 	"choose_exercise": "Выбери упражнение",
 	"statistics": "Статистика",
+	"nutrition": "Питание",
+	"settings": "Настройки",
+	"streak_format": "%d %s подряд",
+	"streak_record_format": "Рекорд: %d %s",
+	"streak_done": "Сегодня засчитано",
+	"streak_pending": "Сегодня ещё можно засчитать",
+	"settings_open": "Настройки",
 
 	"back": "Назад",
 	"finish": "Завершить",
@@ -50,6 +63,10 @@ const RU = {
 	"summary_rest": "Время отдыха",
 
 	"stats_title": "Статистика",
+	"tab_overview": "Обзор",
+	"tab_graphs": "Графики",
+	"tab_summary": "Итоги",
+	"tab_macros": "КБЖУ",
 	"period_day": "День",
 	"period_week": "Неделя",
 	"period_month": "Месяц",
@@ -61,17 +78,101 @@ const RU = {
 	"recent_format": "%s · %d подх. · %d повт.",
 	"export": "Экспорт",
 	"import": "Импорт",
-	"export_dialog": "Экспорт статистики",
-	"import_dialog": "Импорт статистики",
+	"export_dialog": "Экспорт данных",
+	"import_dialog": "Импорт данных",
 	"backup_name": "refitn-backup-%s.json",
-	"export_saved": "Статистика сохранена: %s",
+	"export_saved": "Данные сохранены: %s",
 	"export_failed": "Не удалось сохранить файл",
-	"import_ok": "Добавлено тренировок: %d",
+	"import_ok": "Тренировок: %d, питания: %d",
 	"import_failed": "Не удалось прочитать файл",
+
+	"today_title": "Сегодня",
+	"today_summary_format": "Сегодня · %d ккал",
+	"no_data": "Нет данных",
+	"calories": "Калории",
+	"protein": "Белки",
+	"fat": "Жиры",
+	"carbs": "Углеводы",
+	"water": "Вода",
+	"kcal": "ккал",
+	"grams": "г",
+	"ml": "мл",
+	"month_title_format": "%s %d",
+	"last_7_days": "7 дней",
+	"last_30_days": "30 дней",
+	"all_exercises": "Все",
+	"graph_reps": "Повторения по дням",
+	"graph_time": "Время тренировок по дням",
+	"graph_record": "Рекорд повторений за подход",
+	"graph_calories": "Калории по дням",
+	"average_calories": "В среднем: %d ккал/день",
+	"average_macros": "Белки %d · Жиры %d · Углеводы %d · Вода %d мл",
+	"goal_format": "Цель: %d",
+	"goal_water_format": "Цель: %d мл",
+
+	"nutrition_title": "Питание",
+	"add_entry": "Добавить запись",
+	"entry_form_title": "Новая запись",
+	"entry_name": "Название (необязательно)",
+	"nutrition_empty": "Записей за сегодня пока нет",
+	"entry_macros_format": "%d ккал · Б %d · Ж %d · У %d",
+	"delete": "Удалить",
+	"unnamed_entry": "Без названия",
+	"water_title": "Вода",
+	"water_today_format": "Выпито: %d мл из %d мл",
+	"add_250": "+250 мл",
+	"add_500": "+500 мл",
+	"manual": "Ввести вручную",
+	"dialog_water": "Вода, мл",
+	"entry_added": "Запись добавлена",
+	"entry_deleted": "Запись удалена",
+	"nutrition_hint": "Название можно не заполнять",
+	"invalid_values": "Проверь значения",
+
+	"settings_title": "Настройки",
+	"settings_goals": "Цели на день",
+	"goal_calories": "Калории, ккал",
+	"goal_protein": "Белки, г",
+	"goal_fat": "Жиры, г",
+	"goal_carbs": "Углеводы, г",
+	"goal_water": "Вода, мл",
+	"settings_steps": "Шаги кнопок + / −",
+	"step_reps": "Повторения, шт.",
+	"step_rest": "Отдых, сек.",
+	"settings_feedback": "Звук и вибрация",
+	"sound_enabled": "Звук",
+	"vibration_enabled": "Вибрация",
+	"save": "Сохранить",
+	"settings_saved": "Настройки сохранены",
+	"enter_number": "Введите число",
 }
 
 static func t(key: String) -> String:
 	return RU.get(key, key)
+
+
+static func month_name(month: int) -> String:
+	return str(MONTHS[clampi(month, 1, 12) - 1])
+
+
+static func day_word(count: int) -> String:
+	var mod100 := count % 100
+	var mod10 := count % 10
+	if mod100 >= 11 and mod100 <= 14:
+		return "дней"
+	if mod10 == 1:
+		return "день"
+	if mod10 >= 2 and mod10 <= 4:
+		return "дня"
+	return "дней"
+
+
+static func format_streak(count: int) -> String:
+	return t("streak_format") % [count, day_word(count)]
+
+
+static func format_streak_record(count: int) -> String:
+	return t("streak_record_format") % [count, day_word(count)]
 
 static func has_exercise(id: String) -> bool:
 	for exercise in EXERCISES:

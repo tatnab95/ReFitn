@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+[ext_resource type="Script" path="res://scripts/flame_icon.gd" id="2_flame"]
+[ext_resource type="Script" path="res://scripts/gear_button.gd" id="3_gear"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -37,6 +39,30 @@ theme_override_constants/margin_bottom = 44
 layout_mode = 2
 theme_override_constants/separation = 20
 
+[node name="TopRow" type="HBoxContainer" parent="Margin/MainVBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="StreakFlame" type="Control" parent="Margin/MainVBox/TopRow"]
+custom_minimum_size = Vector2(64, 78)
+layout_mode = 2
+script = ExtResource("2_flame")
+
+[node name="StreakLabel" type="Label" parent="Margin/MainVBox/TopRow"]
+layout_mode = 2
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="TopSpacer" type="Control" parent="Margin/MainVBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SettingsButton" type="Button" parent="Margin/MainVBox/TopRow"]
+custom_minimum_size = Vector2(110, 100)
+layout_mode = 2
+script = ExtResource("3_gear")
+
 [node name="Title" type="Label" parent="Margin/MainVBox"]
 layout_mode = 2
 horizontal_alignment = 1
@@ -57,6 +83,12 @@ theme_override_font_sizes/font_size = 42
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 16
+
+[node name="NutritionButton" type="Button" parent="Margin/MainVBox"]
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+theme_override_font_sizes/font_size = 52
 
 [node name="StatsButton" type="Button" parent="Margin/MainVBox"]
 custom_minimum_size = Vector2(0, 140)

@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/stats.gd" id="1_stats"]
+[ext_resource type="Script" path="res://scripts/stats_overview.gd" id="2_overview"]
+[ext_resource type="Script" path="res://scripts/stats_graphs.gd" id="3_graphs"]
+[ext_resource type="Script" path="res://scripts/stats_macros.gd" id="4_macros"]
 
 [node name="Stats" type="Control"]
 layout_mode = 3
@@ -28,14 +31,14 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 36
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 36
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
 
 [node name="MainVBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 12
 
 [node name="Header" type="HBoxContainer" parent="Margin/MainVBox"]
 custom_minimum_size = Vector2(0, 110)
@@ -58,68 +61,105 @@ theme_override_font_sizes/font_size = 52
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 
-[node name="PeriodRow" type="HBoxContainer" parent="Margin/MainVBox"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="DayButton" type="Button" parent="Margin/MainVBox/PeriodRow"]
-custom_minimum_size = Vector2(0, 110)
-layout_mode = 2
-size_flags_horizontal = 3
-toggle_mode = true
-theme_override_font_sizes/font_size = 38
-
-[node name="WeekButton" type="Button" parent="Margin/MainVBox/PeriodRow"]
-custom_minimum_size = Vector2(0, 110)
-layout_mode = 2
-size_flags_horizontal = 3
-toggle_mode = true
-theme_override_font_sizes/font_size = 38
-
-[node name="MonthButton" type="Button" parent="Margin/MainVBox/PeriodRow"]
-custom_minimum_size = Vector2(0, 110)
-layout_mode = 2
-size_flags_horizontal = 3
-toggle_mode = true
-theme_override_font_sizes/font_size = 38
-
-[node name="Scroll" type="ScrollContainer" parent="Margin/MainVBox"]
+[node name="Tabs" type="TabContainer" parent="Margin/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_font_sizes/font_size = 30
+
+[node name="Overview" type="ScrollContainer" parent="Margin/MainVBox/Tabs"]
+layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="Content" type="VBoxContainer" parent="Margin/MainVBox/Scroll"]
+[node name="OverviewContent" type="VBoxContainer" parent="Margin/MainVBox/Tabs/Overview"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16
+script = ExtResource("2_overview")
 
-[node name="ExerciseStats" type="VBoxContainer" parent="Margin/MainVBox/Scroll/Content"]
+[node name="Graphs" type="ScrollContainer" parent="Margin/MainVBox/Tabs"]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="GraphsContent" type="VBoxContainer" parent="Margin/MainVBox/Tabs/Graphs"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+script = ExtResource("3_graphs")
+
+[node name="Summary" type="ScrollContainer" parent="Margin/MainVBox/Tabs"]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="SummaryContent" type="VBoxContainer" parent="Margin/MainVBox/Tabs/Summary"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="PeriodRow" type="HBoxContainer" parent="Margin/MainVBox/Tabs/Summary/SummaryContent"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DayButton" type="Button" parent="Margin/MainVBox/Tabs/Summary/SummaryContent/PeriodRow"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+theme_override_font_sizes/font_size = 34
+
+[node name="WeekButton" type="Button" parent="Margin/MainVBox/Tabs/Summary/SummaryContent/PeriodRow"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+theme_override_font_sizes/font_size = 34
+
+[node name="MonthButton" type="Button" parent="Margin/MainVBox/Tabs/Summary/SummaryContent/PeriodRow"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+theme_override_font_sizes/font_size = 34
+
+[node name="ExerciseStats" type="VBoxContainer" parent="Margin/MainVBox/Tabs/Summary/SummaryContent"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="RecentTitle" type="Label" parent="Margin/MainVBox/Scroll/Content"]
+[node name="RecentTitle" type="Label" parent="Margin/MainVBox/Tabs/Summary/SummaryContent"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 
-[node name="RecentList" type="VBoxContainer" parent="Margin/MainVBox/Scroll/Content"]
+[node name="RecentList" type="VBoxContainer" parent="Margin/MainVBox/Tabs/Summary/SummaryContent"]
 layout_mode = 2
 theme_override_constants/separation = 12
+
+[node name="Macros" type="ScrollContainer" parent="Margin/MainVBox/Tabs"]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="MacrosContent" type="VBoxContainer" parent="Margin/MainVBox/Tabs/Macros"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+script = ExtResource("4_macros")
 
 [node name="BottomRow" type="HBoxContainer" parent="Margin/MainVBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="ExportButton" type="Button" parent="Margin/MainVBox/BottomRow"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 34
 
 [node name="ImportButton" type="Button" parent="Margin/MainVBox/BottomRow"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 34
 
 [node name="Status" type="Label" parent="Margin/MainVBox"]
 custom_minimum_size = Vector2(0, 34)

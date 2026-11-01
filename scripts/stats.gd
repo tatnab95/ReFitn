@@ -1,21 +1,23 @@
 extends Control
 
 const Texts = preload("res://scripts/texts.gd")
-
-const MUTED_COLOR := Color(0.576471, 0.627451, 0.721569)
-const OK_COLOR := Color(0.4, 0.85, 0.6)
-const ERROR_COLOR := Color(0.9, 0.4, 0.45)
+const ThemeColors = preload("res://scripts/theme_colors.gd")
 
 enum Period { DAY, WEEK, MONTH }
 
+@onready var background: ColorRect = $Background
 @onready var back_button: Button = $Margin/MainVBox/Header/BackButton
 @onready var title_label: Label = $Margin/MainVBox/Header/Title
-@onready var day_button: Button = $Margin/MainVBox/PeriodRow/DayButton
-@onready var week_button: Button = $Margin/MainVBox/PeriodRow/WeekButton
-@onready var month_button: Button = $Margin/MainVBox/PeriodRow/MonthButton
-@onready var exercise_stats: VBoxContainer = $Margin/MainVBox/Scroll/Content/ExerciseStats
-@onready var recent_title: Label = $Margin/MainVBox/Scroll/Content/RecentTitle
-@onready var recent_list: VBoxContainer = $Margin/MainVBox/Scroll/Content/RecentList
+@onready var tabs: TabContainer = $Margin/MainVBox/Tabs
+@onready var overview_content = $Margin/MainVBox/Tabs/Overview/OverviewContent
+@onready var graphs_content = $Margin/MainVBox/Tabs/Graphs/GraphsContent
+@onready var macros_content = $Margin/MainVBox/Tabs/Macros/MacrosContent
+@onready var day_button: Button = $Margin/MainVBox/Tabs/Summary/SummaryContent/PeriodRow/DayButton
+@onready var week_button: Button = $Margin/MainVBox/Tabs/Summary/SummaryContent/PeriodRow/WeekButton
+@onready var month_button: Button = $Margin/MainVBox/Tabs/Summary/SummaryContent/PeriodRow/MonthButton
+@onready var exercise_stats: VBoxContainer = $Margin/MainVBox/Tabs/Summary/SummaryContent/ExerciseStats
+@onready var recent_title: Label = $Margin/MainVBox/Tabs/Summary/SummaryContent/RecentTitle
+@onready var recent_list: VBoxContainer = $Margin/MainVBox/Tabs/Summary/SummaryContent/RecentList
 @onready var export_button: Button = $Margin/MainVBox/BottomRow/ExportButton
 @onready var import_button: Button = $Margin/MainVBox/BottomRow/ImportButton
 @onready var status_label: Label = $Margin/MainVBox/Status
@@ -26,8 +28,13 @@ var period := Period.DAY
 
 
 func _ready() -> void:
+	background.color = ThemeColors.BG
 	back_button.text = Texts.t("back")
 	title_label.text = Texts.t("stats_title")
+	tabs.set_tab_title(0, Texts.t("tab_overview"))
+	tabs.set_tab_title(1, Texts.t("tab_graphs"))
+	tabs.set_tab_title(2, Texts.t("tab_summary"))
+	tabs.set_tab_title(3, Texts.t("tab_macros"))
 	day_button.text = Texts.t("period_day")
 	week_button.text = Texts.t("period_week")
 	month_button.text = Texts.t("period_month")
@@ -41,9 +48,27 @@ func _ready() -> void:
 	month_button.pressed.connect(_set_period.bind(Period.MONTH))
 	export_button.pressed.connect(_on_export_pressed)
 	import_button.pressed.connect(_on_import_pressed)
+	tabs.tab_changed.connect(_on_tab_changed)
 
 	_configure_dialogs()
 	_set_period(Period.DAY)
+	_refresh_extra_tabs()
+
+
+func _refresh_extra_tabs() -> void:
+	overview_content.refresh()
+	graphs_content.refresh()
+	macros_content.refresh()
+
+
+func _on_tab_changed(index: int) -> void:
+	match index:
+		0:
+			overview_content.refresh()
+		1:
+			graphs_content.refresh()
+		3:
+			macros_content.refresh()
 
 
 func _configure_dialogs() -> void:
@@ -182,13 +207,13 @@ func _make_exercise_card(exercise_name: String, sets: int, reps: int, seconds: i
 	var time_label := Label.new()
 	time_label.text = Texts.t("stats_time_format") % Texts.format_time(seconds)
 	time_label.add_theme_font_size_override("font_size", 30)
-	time_label.add_theme_color_override("font_color", MUTED_COLOR)
+	time_label.add_theme_color_override("font_color", ThemeColors.MUTED)
 	time_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 	var numbers_label := Label.new()
 	numbers_label.text = Texts.t("stats_exercise_format") % [sets, reps]
 	numbers_label.add_theme_font_size_override("font_size", 34)
-	numbers_label.add_theme_color_override("font_color", MUTED_COLOR)
+	numbers_label.add_theme_color_override("font_color", ThemeColors.MUTED)
 
 	top_row.add_child(name_label)
 	top_row.add_child(time_label)
@@ -236,13 +261,13 @@ func _make_recent_card(workout: Dictionary) -> PanelContainer:
 	var duration_label := Label.new()
 	duration_label.text = Texts.format_time(int(workout.get("duration_seconds", 0)))
 	duration_label.add_theme_font_size_override("font_size", 30)
-	duration_label.add_theme_color_override("font_color", MUTED_COLOR)
+	duration_label.add_theme_color_override("font_color", ThemeColors.MUTED)
 
 	var bottom_row := HBoxContainer.new()
 	var date_label := Label.new()
 	date_label.text = Texts.format_datetime(int(workout.get("started_unix", 0)))
 	date_label.add_theme_font_size_override("font_size", 26)
-	date_label.add_theme_color_override("font_color", MUTED_COLOR)
+	date_label.add_theme_color_override("font_color", ThemeColors.MUTED)
 	date_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var numbers_label := Label.new()
@@ -250,7 +275,7 @@ func _make_recent_card(workout: Dictionary) -> PanelContainer:
 		int(workout.get("sets", 0)), int(workout.get("reps", 0))
 	]
 	numbers_label.add_theme_font_size_override("font_size", 26)
-	numbers_label.add_theme_color_override("font_color", MUTED_COLOR)
+	numbers_label.add_theme_color_override("font_color", ThemeColors.MUTED)
 
 	top_row.add_child(name_label)
 	top_row.add_child(duration_label)
@@ -267,7 +292,7 @@ func _make_muted_label(label_text: String, font_size: int) -> Label:
 	var label := Label.new()
 	label.text = label_text
 	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", MUTED_COLOR)
+	label.add_theme_color_override("font_color", ThemeColors.MUTED)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
 
@@ -296,13 +321,16 @@ func _on_import_selected(path: String) -> void:
 	if added < 0:
 		_show_status(Texts.t("import_failed"), true)
 		return
-	_show_status(Texts.t("import_ok") % added, false)
+	_show_status(Texts.t("import_ok") % [
+		added, int(Storage.last_import_info.get("nutrition", 0))
+	], false)
 	_refresh()
+	_refresh_extra_tabs()
 
 
 func _show_status(message: String, is_error: bool) -> void:
 	status_label.text = message
-	status_label.add_theme_color_override("font_color", ERROR_COLOR if is_error else OK_COLOR)
+	status_label.add_theme_color_override("font_color", ThemeColors.ERROR if is_error else ThemeColors.GREEN_BRIGHT)
 
 
 func _on_back_pressed() -> void:

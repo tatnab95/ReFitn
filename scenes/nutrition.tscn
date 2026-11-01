@@ -1,0 +1,238 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/nutrition.gd" id="1_nutrition"]
+[ext_resource type="PackedScene" path="res://scenes/number_input_dialog.tscn" id="2_dialog"]
+
+[node name="Nutrition" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nutrition")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0627451, 0.0745098, 0.101961, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 32
+
+[node name="MainVBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="Margin/MainVBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Margin/MainVBox/Header"]
+custom_minimum_size = Vector2(160, 110)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+
+[node name="Title" type="Label" parent="Margin/MainVBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 52
+
+[node name="HeaderSpacer" type="Control" parent="Margin/MainVBox/Header"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Margin/MainVBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="EntryPanel" type="PanelContainer" parent="Margin/MainVBox/Scroll/Content"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Margin/MainVBox/Scroll/Content/EntryPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EntryTitle" type="Label" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+
+[node name="NameInput" type="LineEdit" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+max_length = 80
+placeholder_text = "Название"
+theme_override_font_sizes/font_size = 38
+
+[node name="Fields" type="GridContainer" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="CaloriesLabel" type="Label" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="CaloriesInput" type="LineEdit" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+max_length = 6
+virtual_keyboard_enabled = true
+virtual_keyboard_show_on_focus = true
+virtual_keyboard_type = 2
+theme_override_font_sizes/font_size = 44
+
+[node name="ProteinLabel" type="Label" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="ProteinInput" type="LineEdit" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+max_length = 6
+virtual_keyboard_enabled = true
+virtual_keyboard_show_on_focus = true
+virtual_keyboard_type = 2
+theme_override_font_sizes/font_size = 44
+
+[node name="FatLabel" type="Label" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="FatInput" type="LineEdit" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+max_length = 6
+virtual_keyboard_enabled = true
+virtual_keyboard_show_on_focus = true
+virtual_keyboard_type = 2
+theme_override_font_sizes/font_size = 44
+
+[node name="CarbsLabel" type="Label" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="CarbsInput" type="LineEdit" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox/Fields"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+max_length = 6
+virtual_keyboard_enabled = true
+virtual_keyboard_show_on_focus = true
+virtual_keyboard_type = 2
+theme_override_font_sizes/font_size = 44
+
+[node name="Hint" type="Label" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox"]
+layout_mode = 2
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.576471, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 24
+
+[node name="AddButton" type="Button" parent="Margin/MainVBox/Scroll/Content/EntryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+theme_override_font_sizes/font_size = 40
+
+[node name="TodayTitle" type="Label" parent="Margin/MainVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+
+[node name="TodayList" type="VBoxContainer" parent="Margin/MainVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="WaterPanel" type="PanelContainer" parent="Margin/MainVBox/Scroll/Content"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Margin/MainVBox/Scroll/Content/WaterPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="Margin/MainVBox/Scroll/Content/WaterPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="WaterTitle" type="Label" parent="Margin/MainVBox/Scroll/Content/WaterPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+
+[node name="WaterValue" type="Label" parent="Margin/MainVBox/Scroll/Content/WaterPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94902, 0.694118, 0.203922, 1)
+theme_override_font_sizes/font_size = 40
+
+[node name="WaterButtons" type="HBoxContainer" parent="Margin/MainVBox/Scroll/Content/WaterPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Water250Button" type="Button" parent="Margin/MainVBox/Scroll/Content/WaterPanel/Margin/VBox/WaterButtons"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 34
+
+[node name="Water500Button" type="Button" parent="Margin/MainVBox/Scroll/Content/WaterPanel/Margin/VBox/WaterButtons"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 34
+
+[node name="ManualWaterButton" type="Button" parent="Margin/MainVBox/Scroll/Content/WaterPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+
+[node name="Status" type="Label" parent="Margin/MainVBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.576471, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 24
+
+[node name="NumberInputDialog" parent="." instance=ExtResource("2_dialog")]
