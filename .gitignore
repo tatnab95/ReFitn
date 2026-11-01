@@ -1,3 +1,15 @@
-# Godot 4+ specific ignores
+# Godot 4
 .godot/
+
+# Android build output and local export credentials
 /android/
+/build/
+*.apk
+*.aab
+*.keystore
+*.jks
+export_credentials.cfg
+
+# OS / editors
+.DS_Store
+Thumbs.db

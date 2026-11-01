@@ -1,0 +1,137 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/summary.gd" id="1_summary"]
+
+[node name="Summary" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_summary")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0627451, 0.0745098, 0.101961, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 52
+theme_override_constants/margin_right = 44
+theme_override_constants/margin_bottom = 44
+
+[node name="MainVBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Margin/MainVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 64
+
+[node name="Exercise" type="Label" parent="Margin/MainVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.576471, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 38
+
+[node name="SummaryPanel" type="PanelContainer" parent="Margin/MainVBox"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Margin/MainVBox/SummaryPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 28
+
+[node name="VBox" type="VBoxContainer" parent="Margin/MainVBox/SummaryPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SetsCaption" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.576471, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 32
+
+[node name="SetsValue" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.94902, 0.694118, 0.203922, 1)
+theme_override_font_sizes/font_size = 136
+
+[node name="RepsCaption" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.576471, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 32
+
+[node name="RepsValue" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.94902, 0.694118, 0.203922, 1)
+theme_override_font_sizes/font_size = 136
+
+[node name="Separator" type="HSeparator" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="TotalRow" type="HBoxContainer" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Caption" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox/TotalRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+
+[node name="Value" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox/TotalRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+
+[node name="WorkRow" type="HBoxContainer" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Caption" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox/WorkRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+
+[node name="Value" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox/WorkRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+
+[node name="RestRow" type="HBoxContainer" parent="Margin/MainVBox/SummaryPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Caption" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox/RestRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+
+[node name="Value" type="Label" parent="Margin/MainVBox/SummaryPanel/Margin/VBox/RestRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+
+[node name="Spacer" type="Control" parent="Margin/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DoneButton" type="Button" parent="Margin/MainVBox"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+theme_override_font_sizes/font_size = 58

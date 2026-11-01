@@ -1,0 +1,142 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/stats.gd" id="1_stats"]
+
+[node name="Stats" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_stats")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0627451, 0.0745098, 0.101961, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 32
+
+[node name="MainVBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="Margin/MainVBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Margin/MainVBox/Header"]
+custom_minimum_size = Vector2(160, 110)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+
+[node name="Title" type="Label" parent="Margin/MainVBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 52
+
+[node name="HeaderSpacer" type="Control" parent="Margin/MainVBox/Header"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+
+[node name="PeriodRow" type="HBoxContainer" parent="Margin/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DayButton" type="Button" parent="Margin/MainVBox/PeriodRow"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+theme_override_font_sizes/font_size = 38
+
+[node name="WeekButton" type="Button" parent="Margin/MainVBox/PeriodRow"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+theme_override_font_sizes/font_size = 38
+
+[node name="MonthButton" type="Button" parent="Margin/MainVBox/PeriodRow"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+theme_override_font_sizes/font_size = 38
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Margin/MainVBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="ExerciseStats" type="VBoxContainer" parent="Margin/MainVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RecentTitle" type="Label" parent="Margin/MainVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+
+[node name="RecentList" type="VBoxContainer" parent="Margin/MainVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BottomRow" type="HBoxContainer" parent="Margin/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ExportButton" type="Button" parent="Margin/MainVBox/BottomRow"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+
+[node name="ImportButton" type="Button" parent="Margin/MainVBox/BottomRow"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+
+[node name="Status" type="Label" parent="Margin/MainVBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.576471, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 24
+
+[node name="ExportDialog" type="FileDialog" parent="."]
+size = Vector2i(900, 1200)
+file_mode = 4
+access = 2
+filters = PackedStringArray("*.json ; JSON")
+use_native_dialog = false
+
+[node name="ImportDialog" type="FileDialog" parent="."]
+size = Vector2i(900, 1200)
+access = 2
+filters = PackedStringArray("*.json ; JSON")
+use_native_dialog = false
