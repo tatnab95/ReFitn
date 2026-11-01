@@ -9,6 +9,7 @@
 *.keystore
 *.jks
 export_credentials.cfg
+ai_settings.json
 
 # OS / editors
 .DS_Store

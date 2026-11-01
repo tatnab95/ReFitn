@@ -2,6 +2,7 @@ extends Control
 
 const Texts = preload("res://scripts/texts.gd")
 const ThemeColors = preload("res://scripts/theme_colors.gd")
+const AiSettingsPanel = preload("res://scripts/ai_settings_panel.gd")
 
 @onready var background: ColorRect = $Background
 @onready var back_button: Button = $Margin/MainVBox/Header/BackButton
@@ -56,6 +57,10 @@ func _ready() -> void:
 		input.text_changed.connect(_on_numeric_changed.bind(input))
 
 	_load_values()
+	var content := save_button.get_parent()
+	var ai_panel := AiSettingsPanel.new()
+	content.add_child(ai_panel)
+	content.move_child(ai_panel, save_button.get_index())
 
 
 func _load_values() -> void:

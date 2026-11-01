@@ -36,7 +36,7 @@ func _refresh_streak() -> void:
 	streak_label.text = Texts.format_streak(current)
 	streak_label.add_theme_color_override(
 		"font_color",
-		ThemeColors.GREEN_BRIGHT if trained_today else ThemeColors.GOLD
+		ThemeColors.GREEN_BRIGHT if trained_today else ThemeColors.MUTED
 	)
 	if trained_today:
 		streak_flame.set_flame(ThemeColors.GREEN_BRIGHT, ThemeColors.TRANSPARENT, 0.0)

@@ -124,7 +124,7 @@ func _build() -> void:
 	var calendar_header := HBoxContainer.new()
 	calendar_header.add_theme_constant_override("separation", 10)
 	var prev_button := Button.new()
-	prev_button.text = "‹"
+	prev_button.text = Texts.t("month_prev")
 	prev_button.custom_minimum_size = Vector2(96, 88)
 	prev_button.add_theme_font_size_override("font_size", 52)
 	prev_button.pressed.connect(_on_prev_month)
@@ -134,7 +134,7 @@ func _build() -> void:
 	_month_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_month_label.add_theme_font_size_override("font_size", 38)
 	var next_button := Button.new()
-	next_button.text = "›"
+	next_button.text = Texts.t("month_next")
 	next_button.custom_minimum_size = Vector2(96, 88)
 	next_button.add_theme_font_size_override("font_size", 52)
 	next_button.pressed.connect(_on_next_month)

@@ -3,6 +3,7 @@ extends Control
 const Texts = preload("res://scripts/texts.gd")
 const ThemeColors = preload("res://scripts/theme_colors.gd")
 const Streak = preload("res://scripts/streak.gd")
+const FoodPhotoDialog = preload("res://scripts/food_photo_dialog.gd")
 
 @onready var background: ColorRect = $Background
 @onready var back_button: Button = $Margin/MainVBox/Header/BackButton
@@ -37,7 +38,7 @@ func _ready() -> void:
 	back_button.text = Texts.t("back")
 	title_label.text = Texts.t("nutrition_title")
 	entry_title.text = Texts.t("entry_form_title")
-	name_input.placeholder_text = Texts.t("entry_name")
+	name_input.placeholder_text = Texts.t("entry_name_placeholder")
 	calories_label.text = Texts.t("calories")
 	protein_label.text = Texts.t("protein")
 	fat_label.text = Texts.t("fat")
@@ -57,6 +58,7 @@ func _ready() -> void:
 	water_500_button.pressed.connect(_on_add_water.bind(500))
 	manual_water_button.pressed.connect(_on_manual_water_pressed)
 	number_dialog.submitted.connect(_on_water_submitted)
+	_setup_photo_entry()
 
 	for input in [calories_input, protein_input, fat_input, carbs_input]:
 		input.text_changed.connect(_on_numeric_changed.bind(input))
@@ -118,7 +120,7 @@ func _make_entry_card(entry: Dictionary) -> PanelContainer:
 		entry_name = Texts.t("unnamed_entry")
 	var datetime := str(entry.get("datetime", ""))
 	var time_part := datetime.substr(11, 5) if datetime.length() >= 16 else ""
-	name_label.text = entry_name + (" · " + time_part if not time_part.is_empty() else "")
+	name_label.text = entry_name + (Texts.t("time_separator") + time_part if not time_part.is_empty() else "")
 	name_label.add_theme_font_size_override("font_size", 34)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -174,6 +176,28 @@ func _on_delete_entry(entry_id: String) -> void:
 	if Storage.delete_food_entry(entry_id):
 		_show_status(Texts.t("entry_deleted"), false)
 		_refresh()
+
+
+func _setup_photo_entry() -> void:
+	var photo_dialog := FoodPhotoDialog.new()
+	add_child(photo_dialog)
+	photo_dialog.entry_confirmed.connect(_on_photo_entry_confirmed)
+	var photo_button := Button.new()
+	photo_button.text = Texts.t("photo_button")
+	photo_button.custom_minimum_size = Vector2(0, 92)
+	photo_button.add_theme_font_size_override("font_size", 32)
+	var parent := add_button.get_parent()
+	parent.add_child(photo_button)
+	parent.move_child(photo_button, add_button.get_index())
+	photo_button.pressed.connect(photo_dialog.open_photo)
+
+
+func _on_photo_entry_confirmed(entry: Dictionary) -> void:
+	Storage.add_food_entry(
+		str(entry.name), int(entry.calories), int(entry.protein), int(entry.fat), int(entry.carbs)
+	)
+	_show_status(Texts.t("entry_added"), false)
+	_refresh()
 
 
 func _on_add_water(amount_ml: int) -> void:
