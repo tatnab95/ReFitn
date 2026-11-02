@@ -3,10 +3,30 @@ extends Node
 const Texts = preload("res://scripts/texts.gd")
 const Streak = preload("res://scripts/streak.gd")
 const ThemeBuilder = preload("res://scripts/theme_builder.gd")
+const DataSafety = preload("res://scripts/data_safety.gd")
+const Plans = preload("res://scripts/plans.gd")
 
 const WORKOUTS_PATH := "user://workouts.json"
 const SETTINGS_PATH := "user://settings.json"
 const NUTRITION_PATH := "user://nutrition.json"
+const REST_PATH := "user://rest_days.json"
+const DEFAULT_PLAN_ID := "full_body"
+const DEFAULT_POINTS := {
+	"pullups": 4,
+	"pushups": 3,
+	"muscle_up_1": 8,
+	"muscle_up_2": 10,
+	"squats": 1,
+	"abs": 1,
+	"expander": 1,
+}
+const DEFAULT_GOAL_SETTINGS := {
+	"smart_multiplier": 1.05,
+	"raise_multiplier": 1.05,
+	"fail_threshold": 0.7,
+	"fail_multiplier": 0.9,
+}
+const SETTINGS_EXTRA_KEYS := ["plan_id", "muscle_up_variant", "points", "goal_settings", "daily_goal", "goal_last_day"]
 const DEFAULT_REPS := 10
 const DEFAULT_REST_SECONDS := 120
 const DEFAULT_REPS_STEP := 1
@@ -26,6 +46,12 @@ var settings: Dictionary = {}
 var nutrition_entries: Array = []
 var water_by_day: Dictionary = {}
 var last_import_info: Dictionary = {}
+var migrated_paths: Array = []
+var last_import_error := ""
+var rest_days: Array = []
+
+# Set by the "measure" button on the main screen, read once by the workout screen.
+var pending_measure := false
 
 # Transient values used to move between scenes.
 var selected_exercise_id := "pullups"
@@ -40,11 +66,25 @@ func _ready() -> void:
 		save_workouts()
 	if not FileAccess.file_exists(NUTRITION_PATH):
 		save_nutrition()
+	if not FileAccess.file_exists(REST_PATH):
+		save_rest_days()
+	for path in migrated_paths:
+		match path:
+			WORKOUTS_PATH:
+				save_workouts()
+			SETTINGS_PATH:
+				save_settings()
+			NUTRITION_PATH:
+				save_nutrition()
+			REST_PATH:
+				save_rest_days()
 	ThemeBuilder.apply(get_tree().root)
 
 
 func load_all() -> void:
 	workouts = []
+	migrated_paths = []
+	rest_days = _load_rest_days()
 
 	var workouts_data = _read_json(WORKOUTS_PATH)
 	var workouts_list = workouts_data
@@ -127,6 +167,7 @@ func _update_exercise_setting(exercise_id: String, key: String, value: int) -> v
 
 func save_settings() -> void:
 	_write_json(SETTINGS_PATH, {
+		"schema_version": DataSafety.SCHEMA_VERSION,
 		"version": SAVE_VERSION,
 		"exercises": settings.get("exercises", {}),
 		"goals": get_goals(),
@@ -139,7 +180,84 @@ func save_settings() -> void:
 		"theme_mode": get_theme_mode(),
 		"reminder_enabled": get_reminder_enabled(),
 		"reminder_minutes": get_reminder_minutes(),
+		"plan_id": get_plan_id(),
+		"muscle_up_variant": get_muscle_up_variant(),
+		"points": get_points_table(),
+		"goal_settings": get_goal_settings(),
+		"daily_goal": get_daily_goal(),
+		"goal_last_day": get_goal_last_day(),
 	})
+
+
+func get_plan_id() -> String:
+	return str(settings.get("plan_id", DEFAULT_PLAN_ID))
+
+
+func set_plan_id(plan_id: String) -> void:
+	settings["plan_id"] = plan_id if plan_id in Plans.PLAN_IDS else DEFAULT_PLAN_ID
+	save_settings()
+
+
+func get_muscle_up_variant() -> String:
+	return str(settings.get("muscle_up_variant", "muscle_up_1"))
+
+
+func set_muscle_up_variant(exercise_id: String) -> void:
+	settings["muscle_up_variant"] = "muscle_up_2" if exercise_id == "muscle_up_2" else "muscle_up_1"
+	save_settings()
+
+
+func get_points_table() -> Dictionary:
+	var table = settings.get("points", {})
+	return _clean_points(table if typeof(table) == TYPE_DICTIONARY else {})
+
+
+func get_points_per_rep(exercise_id: String) -> int:
+	return int(get_points_table().get(exercise_id, 1))
+
+
+func points_for(exercise_id: String, reps: int) -> int:
+	return get_points_per_rep(exercise_id) * maxi(0, reps)
+
+
+func workout_points(workout: Dictionary) -> int:
+	var stored := int(workout.get("points", -1))
+	if stored >= 0:
+		return stored
+	return points_for(str(workout.get("exercise_id", "")), int(workout.get("reps", 0)))
+
+
+func set_points_table(table: Dictionary) -> void:
+	settings["points"] = _clean_points(table)
+	save_settings()
+
+
+func get_goal_settings() -> Dictionary:
+	var raw = settings.get("goal_settings", {})
+	return _clean_goal_settings(raw if typeof(raw) == TYPE_DICTIONARY else {})
+
+
+func set_goal_settings(values: Dictionary) -> void:
+	settings["goal_settings"] = _clean_goal_settings(values)
+	save_settings()
+
+
+func get_daily_goal() -> Dictionary:
+	var raw = settings.get("daily_goal", {})
+	return _clean_daily_goal(raw if typeof(raw) == TYPE_DICTIONARY else {})
+
+
+func set_daily_goal(goal_type: String, exercise_id: String, value: int) -> void:
+	settings["daily_goal"] = _clean_daily_goal({"type": goal_type, "exercise": exercise_id, "value": value})
+	save_settings()
+
+
+func get_goal_last_day() -> String:
+	return str(settings.get("goal_last_day", ""))
+
+
+func set_goal_last_day(day_key: String) -> void:
+	settings["goal_last_day"] = day_key
 
 
 func get_theme_mode() -> String:
@@ -167,6 +285,7 @@ func set_reminder(enabled: bool, minutes: int) -> void:
 
 func save_workouts() -> void:
 	_write_json(WORKOUTS_PATH, {
+		"schema_version": DataSafety.SCHEMA_VERSION,
 		"version": SAVE_VERSION,
 		"workouts": workouts,
 	})
@@ -174,6 +293,7 @@ func save_workouts() -> void:
 
 func save_nutrition() -> void:
 	_write_json(NUTRITION_PATH, {
+		"schema_version": DataSafety.SCHEMA_VERSION,
 		"version": SAVE_VERSION,
 		"entries": nutrition_entries,
 		"water": water_by_day,
@@ -308,10 +428,50 @@ func get_day_totals(day_key: String) -> Dictionary:
 	return totals
 
 
-func begin_workout(exercise_id: String, started_unix: int) -> String:
+func save_rest_days() -> void:
+	_write_json(REST_PATH, {
+		"schema_version": DataSafety.SCHEMA_VERSION,
+		"days": rest_days,
+	})
+
+
+func _load_rest_days() -> Array:
+	var data = _read_json(REST_PATH)
+	var raw = data.get("days", []) if typeof(data) == TYPE_DICTIONARY else data
+	var result: Array = []
+	if typeof(raw) == TYPE_ARRAY:
+		for value in raw:
+			var key := str(value).strip_edges()
+			if key.length() == 10 and not result.has(key):
+				result.append(key)
+	return result
+
+
+func has_rest_day(day_key: String) -> bool:
+	return rest_days.has(day_key)
+
+
+func rest_day_numbers() -> Dictionary:
+	var result := {}
+	for key in rest_days:
+		result[Streak.day_number_from_key(str(key))] = true
+	return result
+
+
+func add_rest_day(day_key: String) -> void:
+	if day_key.length() != 10 or rest_days.has(day_key):
+		return
+	rest_days.append(day_key)
+	rest_days.sort()
+	save_rest_days()
+
+
+func begin_workout(exercise_id: String, started_unix: int, workout_type: String = "normal") -> String:
 	var workout_id := _new_id()
 	workouts.append({
 		"id": workout_id,
+		"type": "measure" if workout_type == "measure" else "normal",
+		"points": 0,
 		"exercise_id": exercise_id,
 		"started_at": _iso_from_unix(started_unix),
 		"started_unix": started_unix,
@@ -363,14 +523,16 @@ func finish_workout(workout_id: String, patch: Dictionary) -> void:
 func export_workouts(path: String) -> Error:
 	if path.get_extension().is_empty():
 		path += ".json"
-	var streak := Streak.calculate(workouts)
+	var streak := Streak.calculate(workouts, 0, rest_day_numbers())
 	return _write_json(path, {
 		"app": "ReFitn",
+		"schema_version": DataSafety.SCHEMA_VERSION,
 		"version": SAVE_VERSION,
 		"exported_at": _iso_from_unix(int(Time.get_unix_time_from_system())),
 		"workouts": workouts,
 		"nutrition": nutrition_entries,
 		"water": water_by_day,
+		"rest_days": rest_days,
 		"settings": {
 			"exercises": settings.get("exercises", {}),
 			"goals": get_goals(),
@@ -380,6 +542,12 @@ func export_workouts(path: String) -> Error:
 			},
 			"sound_enabled": get_sound_enabled(),
 			"vibration_enabled": get_vibration_enabled(),
+			"plan_id": get_plan_id(),
+			"muscle_up_variant": get_muscle_up_variant(),
+			"points": get_points_table(),
+			"goal_settings": get_goal_settings(),
+			"daily_goal": get_daily_goal(),
+			"goal_last_day": get_goal_last_day(),
 		},
 		"streak_record": int(streak.get("record", 0)),
 	})
@@ -389,9 +557,16 @@ func import_workouts(path: String) -> int:
 	if not FileAccess.file_exists(path):
 		return -1
 
-	var data = _read_json(path)
+	var data = _parse_file(path)
 	if data == null:
 		return -1
+	last_import_error = ""
+	if typeof(data) == TYPE_DICTIONARY and int(data.get("schema_version", 1)) > DataSafety.SCHEMA_VERSION:
+		last_import_error = "newer_version"
+		return -1
+	DataSafety.backup(WORKOUTS_PATH)
+	DataSafety.backup(NUTRITION_PATH)
+	DataSafety.backup(SETTINGS_PATH)
 
 	var imported_list = data
 	var nutrition_list = []
@@ -471,6 +646,19 @@ func import_workouts(path: String) -> int:
 
 	_import_settings(import_settings)
 
+	var added_rest := 0
+	var raw_rest = data.get("rest_days", []) if typeof(data) == TYPE_DICTIONARY else []
+	if typeof(raw_rest) == TYPE_ARRAY:
+		for value in raw_rest:
+			var key := str(value).strip_edges()
+			if key.length() == 10 and not rest_days.has(key):
+				rest_days.append(key)
+				added_rest += 1
+	if added_rest > 0:
+		rest_days.sort()
+		save_rest_days()
+	last_import_info["rest_days"] = added_rest
+
 	return added
 
 
@@ -498,6 +686,16 @@ func _import_settings(import_settings: Dictionary) -> void:
 				set_reps(exercise_id, int(item.reps))
 			if item.has("rest"):
 				set_rest(exercise_id, int(item.rest))
+
+	var merged := settings.duplicate(true)
+	var has_extra := false
+	for key in SETTINGS_EXTRA_KEYS:
+		if import_settings.has(key):
+			merged[key] = import_settings[key]
+			has_extra = true
+	if has_extra:
+		settings = _sanitize_settings(merged)
+		save_settings()
 
 
 func _sanitize_workout(raw: Variant) -> Dictionary:
@@ -546,6 +744,8 @@ func _sanitize_workout(raw: Variant) -> Dictionary:
 
 	return {
 		"id": workout_id,
+		"type": "measure" if str(source.get("type", "")) == "measure" else "normal",
+		"points": int(source.get("points", -1)),
 		"exercise_id": exercise_id,
 		"started_at": started_at,
 		"started_unix": started_unix,
@@ -614,6 +814,12 @@ func _sanitize_settings(raw: Variant) -> Dictionary:
 		"theme_mode": "dark",
 		"reminder_enabled": false,
 		"reminder_minutes": 1200,
+		"plan_id": DEFAULT_PLAN_ID,
+		"muscle_up_variant": "muscle_up_1",
+		"points": DEFAULT_POINTS.duplicate(),
+		"goal_settings": DEFAULT_GOAL_SETTINGS.duplicate(),
+		"daily_goal": {"type": "points", "exercise": "pullups", "value": 0},
+		"goal_last_day": "",
 	}
 	for exercise in Texts.EXERCISES:
 		var exercise_id := str(exercise.id)
@@ -643,10 +849,59 @@ func _sanitize_settings(raw: Variant) -> Dictionary:
 	result.theme_mode = str(raw_dict.get("theme_mode", "dark"))
 	result.reminder_enabled = bool(raw_dict.get("reminder_enabled", false))
 	result.reminder_minutes = clampi(int(raw_dict.get("reminder_minutes", 1200)), 0, 1439)
+
+	var plan_raw := str(raw_dict.get("plan_id", DEFAULT_PLAN_ID))
+	result.plan_id = plan_raw if plan_raw in Plans.PLAN_IDS else DEFAULT_PLAN_ID
+	result.muscle_up_variant = "muscle_up_2" if str(raw_dict.get("muscle_up_variant", "")) == "muscle_up_2" else "muscle_up_1"
+	var points_raw = raw_dict.get("points", {})
+	result.points = _clean_points(points_raw if typeof(points_raw) == TYPE_DICTIONARY else {})
+	var coefs_raw = raw_dict.get("goal_settings", {})
+	result.goal_settings = _clean_goal_settings(coefs_raw if typeof(coefs_raw) == TYPE_DICTIONARY else {})
+	var goal_raw = raw_dict.get("daily_goal", {})
+	result.daily_goal = _clean_daily_goal(goal_raw if typeof(goal_raw) == TYPE_DICTIONARY else {})
+	result.goal_last_day = str(raw_dict.get("goal_last_day", ""))
 	return result
 
 
+func _clean_points(raw: Dictionary) -> Dictionary:
+	var result := DEFAULT_POINTS.duplicate()
+	for key in DEFAULT_POINTS:
+		if raw.has(key):
+			result[key] = clampi(int(raw[key]), 0, 100)
+	return result
+
+
+func _clean_goal_settings(raw: Dictionary) -> Dictionary:
+	var result := DEFAULT_GOAL_SETTINGS.duplicate()
+	for key in DEFAULT_GOAL_SETTINGS:
+		if raw.has(key):
+			result[key] = clampf(float(raw[key]), 0.1, 3.0)
+	return result
+
+
+func _clean_daily_goal(raw: Dictionary) -> Dictionary:
+	var exercise_id := str(raw.get("exercise", "pullups"))
+	if not Texts.has_exercise(exercise_id):
+		exercise_id = "pullups"
+	return {
+		"type": "reps" if str(raw.get("type", "")) == "reps" else "points",
+		"exercise": exercise_id,
+		"value": clampi(int(raw.get("value", 0)), 0, 100000),
+	}
+
+
 func _read_json(path: String) -> Variant:
+	var result: Dictionary = DataSafety.read_json(path)
+	if not bool(result.get("ok", false)) or result.get("data") == null:
+		return null
+	var data = result.get("data")
+	if DataSafety.needs_migration(data) and not migrated_paths.has(path):
+		DataSafety.backup(path)
+		migrated_paths.append(path)
+	return data
+
+
+func _parse_file(path: String) -> Variant:
 	if not FileAccess.file_exists(path):
 		return null
 	var file := FileAccess.open(path, FileAccess.READ)

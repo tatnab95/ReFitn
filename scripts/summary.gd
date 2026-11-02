@@ -45,6 +45,12 @@ func _ready() -> void:
 	work_value.text = Texts.format_time(work_seconds)
 	rest_value.text = Texts.format_time(rest_seconds)
 
+	var points_label := Label.new()
+	points_label.text = Texts.t("summary_points") + ": " + str(int(data.get("points", 0)))
+	points_label.add_theme_font_size_override("font_size", 40)
+	points_label.add_theme_color_override("font_color", ThemeColors.GOLD)
+	sets_caption.get_parent().add_child(points_label)
+
 
 func _on_done_pressed() -> void:
 	Storage.last_summary = {}

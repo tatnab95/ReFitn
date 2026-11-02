@@ -4,6 +4,7 @@ const Texts = preload("res://scripts/texts.gd")
 const ThemeColors = preload("res://scripts/theme_colors.gd")
 const Streak = preload("res://scripts/streak.gd")
 const BarChart = preload("res://scripts/bar_chart.gd")
+const StatsMeasures = preload("res://scripts/stats_measures.gd")
 
 var _built := false
 var _mode_days := 7
@@ -14,6 +15,8 @@ var _exercise_option: OptionButton
 var _reps_chart
 var _time_chart
 var _record_chart
+var _points_chart
+var _measures
 
 
 func _ready() -> void:
@@ -41,12 +44,14 @@ func refresh() -> void:
 	var reps_values := []
 	var time_values := []
 	var record_values := []
+	var points_values := []
 	for day in range(start, today + 1):
 		var civil := Streak.civil_from_days(day)
 		labels.append("%02d.%02d" % [int(civil.day), int(civil.month)])
 		reps_values.append(0)
 		time_values.append(0)
 		record_values.append(0)
+		points_values.append(0)
 
 	for workout in Storage.workouts:
 		if typeof(workout) != TYPE_DICTIONARY:
@@ -68,10 +73,13 @@ func refresh() -> void:
 		time_values[index] = int(time_values[index]) + maxi(0, int(workout.get("duration_seconds", 0)))
 		var workout_record := _workout_record(workout)
 		record_values[index] = maxi(int(record_values[index]), workout_record)
+		points_values[index] = int(points_values[index]) + Storage.workout_points(workout)
 
 	_reps_chart.set_data(reps_values, labels)
 	_time_chart.set_data(time_values, labels)
 	_record_chart.set_data(record_values, labels)
+	_points_chart.set_data(points_values, labels)
+	_measures.refresh()
 
 
 func _workout_record(workout: Dictionary) -> int:
@@ -123,6 +131,9 @@ func _build() -> void:
 	_reps_chart = _add_chart(Texts.t("graph_reps"), false)
 	_time_chart = _add_chart(Texts.t("graph_time"), true)
 	_record_chart = _add_chart(Texts.t("graph_record"), false)
+	_points_chart = _add_chart(Texts.t("graph_points"), false)
+	_measures = StatsMeasures.new()
+	add_child(_measures)
 
 
 func _add_chart(title: String, time_mode: bool):

@@ -3,6 +3,8 @@ extends Control
 const Texts = preload("res://scripts/texts.gd")
 const ThemeColors = preload("res://scripts/theme_colors.gd")
 const RestRing = preload("res://scripts/rest_ring.gd")
+const Measure = preload("res://scripts/measure.gd")
+const Streak = preload("res://scripts/streak.gd")
 
 enum Phase { APPROACH, REST }
 
@@ -65,6 +67,7 @@ var rest_ring: Control
 var last_countdown := -1
 
 var editing_field := ""
+var measure_mode := false
 
 
 func _ready() -> void:
@@ -79,9 +82,12 @@ func _ready() -> void:
 	rest_step = Storage.get_rest_step()
 	workout_started_unix = int(Time.get_unix_time_from_system())
 	phase_started_ms = Time.get_ticks_msec()
+	measure_mode = Storage.pending_measure
+	Storage.pending_measure = false
 
 	title_label.text = Texts.exercise_name(exercise_id)
 	_apply_texts()
+	_setup_measure()
 	_style_screen()
 	_connect_signals()
 	_update_labels()
@@ -175,11 +181,23 @@ func _connect_signals() -> void:
 	number_dialog.submitted.connect(_on_number_submitted)
 
 
+func _setup_measure() -> void:
+	if not measure_mode:
+		return
+	var target: int = Measure.target(exercise_id, Streak.day_number_from_unix(workout_started_unix))
+	if target > 0:
+		reps = target
+		hint_label.text = Texts.t("measure_hint_target") % target
+	else:
+		hint_label.text = Texts.t("measure_hint_none")
+
+
 func _change_reps(delta: int) -> void:
 	if phase != Phase.APPROACH:
 		return
 	reps = clampi(reps + delta * reps_step, 1, 999)
-	Storage.set_reps(exercise_id, reps)
+	if not measure_mode:
+		Storage.set_reps(exercise_id, reps)
 	_update_labels()
 
 
@@ -205,7 +223,8 @@ func _open_number_input(field: String) -> void:
 func _on_number_submitted(value: int) -> void:
 	if editing_field == "reps":
 		reps = clampi(value, 1, 999)
-		Storage.set_reps(exercise_id, reps)
+		if not measure_mode:
+			Storage.set_reps(exercise_id, reps)
 	elif editing_field == "rest":
 		rest_seconds = clampi(value, 0, 3600)
 		Storage.set_rest(exercise_id, rest_seconds)
@@ -233,6 +252,10 @@ func _on_set_done() -> void:
 	_save_progress()
 	_update_labels()
 	Notifier.refresh_daily()
+
+	if measure_mode:
+		_finish_measure()
+		return
 
 	if rest_seconds <= 0:
 		phase = Phase.REST
@@ -391,6 +414,7 @@ func _on_finish_pressed() -> void:
 		"exercise_name": Texts.exercise_name(exercise_id),
 		"sets": sets_done,
 		"reps": total_reps,
+		"points": Storage.points_for(exercise_id, total_reps),
 		"work_seconds": work_seconds,
 		"rest_seconds": rest_seconds_total,
 		"total_seconds": work_seconds + rest_seconds_total,
@@ -402,6 +426,7 @@ func _on_finish_pressed() -> void:
 			"sets": sets_done,
 			"reps": total_reps,
 			"set_reps": set_reps,
+			"points": Storage.points_for(exercise_id, total_reps),
 			"work_seconds": work_seconds,
 			"rest_seconds": rest_seconds_total,
 			"duration_seconds": work_seconds + rest_seconds_total,
@@ -411,9 +436,24 @@ func _on_finish_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/summary.tscn")
 
 
+# Measure: one set per exercise, then straight back to the day's list.
+func _finish_measure() -> void:
+	session_finished = true
+	var work_seconds := int(round(work_ms / 1000.0))
+	Storage.finish_workout(workout_id, {
+		"sets": sets_done,
+		"reps": total_reps,
+		"set_reps": set_reps,
+		"points": Storage.points_for(exercise_id, total_reps),
+		"work_seconds": work_seconds,
+		"rest_seconds": 0,
+	})
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+
+
 func _ensure_workout_started() -> void:
 	if workout_id.is_empty():
-		workout_id = Storage.begin_workout(exercise_id, workout_started_unix)
+		workout_id = Storage.begin_workout(exercise_id, workout_started_unix, "measure" if measure_mode else "normal")
 
 
 func _save_progress() -> void:
@@ -425,6 +465,7 @@ func _save_progress() -> void:
 		"sets": sets_done,
 		"reps": total_reps,
 		"set_reps": set_reps,
+		"points": Storage.points_for(exercise_id, total_reps),
 		"work_seconds": work_seconds,
 		"rest_seconds": rest_seconds_total,
 		"duration_seconds": work_seconds + rest_seconds_total,

@@ -3,6 +3,8 @@ extends RefCounted
 # Photo recognition settings and cached model list. Kept in their own files,
 # outside Storage, so they are never included in statistics export or import.
 
+const DataSafety = preload("res://scripts/data_safety.gd")
+
 const PATH := "user://ai_settings.json"
 const MODELS_CACHE_PATH := "user://ai_models_cache.json"
 const DEFAULT_URL := "https://opencode.ai/zen/go/v1"
@@ -10,18 +12,17 @@ const DEFAULT_URL := "https://opencode.ai/zen/go/v1"
 
 static func load_settings() -> Dictionary:
 	var result := {"api_key": "", "base_url": DEFAULT_URL, "model": ""}
-	if not FileAccess.file_exists(PATH):
+	var loaded: Dictionary = DataSafety.read_json(PATH)
+	if not bool(loaded.get("ok", false)) or typeof(loaded.get("data")) != TYPE_DICTIONARY:
 		return result
-	var file := FileAccess.open(PATH, FileAccess.READ)
-	if file == null:
-		return result
-	var data = JSON.parse_string(file.get_as_text())
-	if typeof(data) != TYPE_DICTIONARY:
-		return result
+	var data: Dictionary = loaded.get("data")
 	result.api_key = str(data.get("api_key", "")).strip_edges()
 	var url := str(data.get("base_url", DEFAULT_URL)).strip_edges()
 	result.base_url = url if not url.is_empty() else DEFAULT_URL
 	result.model = str(data.get("model", "")).strip_edges()
+	if DataSafety.needs_migration(data):
+		DataSafety.backup(PATH)
+		save_settings(result)
 	return result
 
 
@@ -29,7 +30,9 @@ static func save_settings(settings: Dictionary) -> Error:
 	var file := FileAccess.open(PATH, FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify(settings, "\t"))
+	var data := settings.duplicate()
+	data["schema_version"] = DataSafety.SCHEMA_VERSION
+	file.store_string(JSON.stringify(data, "\t"))
 	return OK
 
 
@@ -61,6 +64,7 @@ static func save_models_cache(models: Array, has_vision_metadata: bool, base_url
 	if file == null:
 		return FileAccess.get_open_error()
 	file.store_string(JSON.stringify({
+		"schema_version": DataSafety.SCHEMA_VERSION,
 		"models": models,
 		"has_vision_metadata": has_vision_metadata,
 		"base_url": base_url,

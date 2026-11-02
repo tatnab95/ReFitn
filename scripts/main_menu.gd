@@ -3,6 +3,9 @@ extends Control
 const Texts = preload("res://scripts/texts.gd")
 const ThemeColors = preload("res://scripts/theme_colors.gd")
 const Streak = preload("res://scripts/streak.gd")
+const TodayCard = preload("res://scripts/today_card.gd")
+const DataNotice = preload("res://scripts/data_notice.gd")
+const NotificationPrompt = preload("res://scripts/notification_prompt.gd")
 
 @onready var title_label: Label = $Margin/MainVBox/Title
 @onready var subtitle_label: Label = $Margin/MainVBox/Subtitle
@@ -27,9 +30,35 @@ func _ready() -> void:
 	nutrition_button.pressed.connect(_on_nutrition_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	_wrap_in_scroll()
+	_add_today_card()
 	_build_exercise_list()
 	_refresh_streak()
 	Notifier.refresh_daily()
+	add_child(DataNotice.new())
+	add_child(NotificationPrompt.new())
+
+
+func _add_today_card() -> void:
+	var parent := section_label.get_parent()
+	var card := TodayCard.new()
+	parent.add_child(card)
+	parent.move_child(card, section_label.get_index())
+	var others := Button.new()
+	others.text = Texts.t("other_exercises")
+	others.theme_type_variation = &"SecondaryButton"
+	others.custom_minimum_size = Vector2(0, 100)
+	others.add_theme_font_size_override("font_size", 40)
+	parent.add_child(others)
+	parent.move_child(others, section_label.get_index())
+	section_label.visible = false
+	exercise_list.visible = false
+	others.pressed.connect(_toggle_exercise_list)
+
+
+func _toggle_exercise_list() -> void:
+	var show_list := not exercise_list.visible
+	section_label.visible = show_list
+	exercise_list.visible = show_list
 
 
 func _wrap_in_scroll() -> void:
@@ -45,7 +74,7 @@ func _wrap_in_scroll() -> void:
 
 
 func _refresh_streak() -> void:
-	var info := Streak.calculate(Storage.workouts)
+	var info := Streak.calculate(Storage.workouts, 0, Storage.rest_day_numbers())
 	var current := int(info.get("current", 0))
 	var trained_today := bool(info.get("trained_today", false))
 	streak_label.text = Texts.format_streak(current)

@@ -32,7 +32,7 @@ func _ready() -> void:
 func refresh() -> void:
 	if not _built:
 		return
-	var info := Streak.calculate(Storage.workouts)
+	var info := Streak.calculate(Storage.workouts, 0, Storage.rest_day_numbers())
 	var current := int(info.get("current", 0))
 	var record := int(info.get("record", 0))
 	var trained_today := bool(info.get("trained_today", false))
@@ -53,7 +53,8 @@ func refresh() -> void:
 		_view_year,
 		_view_month,
 		Streak.workout_day_numbers(Storage.workouts),
-		int(info.get("today_number", 0))
+		int(info.get("today_number", 0)),
+		Storage.rest_day_numbers()
 	)
 	_month_label.text = Texts.t("month_title_format") % [
 		Texts.month_name(_view_month), _view_year

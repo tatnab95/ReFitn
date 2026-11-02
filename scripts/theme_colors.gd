@@ -51,6 +51,7 @@ static var ERROR := Color("#E5484D")
 static var ERROR_DARK := Color("#B93238")
 
 static var MISSED := Color("#151E38")
+static var REST := Color("#3B82F6")
 static var GRID := Color("#26366B")
 static var GRID_FAINT := Color(0.149, 0.212, 0.420, 0.35)
 static var ON_GREEN := Color(ON_GREEN_HEX)

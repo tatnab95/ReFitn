@@ -18,11 +18,15 @@ func _ready() -> void:
 	queue_redraw()
 
 
-func set_month(new_year: int, new_month: int, days: Dictionary, today: int) -> void:
+var rest_days: Dictionary = {}
+
+
+func set_month(new_year: int, new_month: int, days: Dictionary, today: int, rest: Dictionary = {}) -> void:
 	year = new_year
 	month = new_month
 	trained_days = days
 	today_number = today
+	rest_days = rest
 	queue_redraw()
 
 
@@ -63,6 +67,8 @@ func _draw() -> void:
 		var fill := ThemeColors.BG_DEEP
 		if has_workout:
 			fill = ThemeColors.GREEN_DARK
+		elif rest_days.has(day_number):
+			fill = ThemeColors.REST
 		elif is_past:
 			fill = ThemeColors.MISSED
 

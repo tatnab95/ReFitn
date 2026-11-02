@@ -56,7 +56,15 @@ static func workout_day_numbers(workouts: Array) -> Dictionary:
 	return result
 
 
-static func calculate(workouts: Array, now_unix: int = 0) -> Dictionary:
+static func day_number_from_key(key: String) -> int:
+	var parts := key.split("-")
+	if parts.size() != 3:
+		return 0
+	return days_from_civil(int(parts[0]), int(parts[1]), int(parts[2]))
+
+
+# rest: day numbers of rest days. A rest day neither adds to the streak nor breaks it.
+static func calculate(workouts: Array, now_unix: int = 0, rest: Dictionary = {}) -> Dictionary:
 	if now_unix <= 0:
 		now_unix = int(Time.get_unix_time_from_system())
 
@@ -66,8 +74,9 @@ static func calculate(workouts: Array, now_unix: int = 0) -> Dictionary:
 
 	var cursor := today_number if trained_today else today_number - 1
 	var current := 0
-	while trained.has(cursor):
-		current += 1
+	while trained.has(cursor) or rest.has(cursor):
+		if trained.has(cursor):
+			current += 1
 		cursor -= 1
 
 	var sorted_numbers := []
@@ -79,7 +88,7 @@ static func calculate(workouts: Array, now_unix: int = 0) -> Dictionary:
 	var run := 0
 	var previous := 0
 	for number in sorted_numbers:
-		if run > 0 and number == previous + 1:
+		if run > 0 and _bridged_by_rest(previous, number, rest):
 			run += 1
 		else:
 			run = 1
@@ -93,6 +102,13 @@ static func calculate(workouts: Array, now_unix: int = 0) -> Dictionary:
 		"today_number": today_number,
 		"days": trained,
 	}
+
+
+static func _bridged_by_rest(previous: int, number: int, rest: Dictionary) -> bool:
+	for day in range(previous + 1, number):
+		if not rest.has(day):
+			return false
+	return true
 
 
 static func days_from_civil(year: int, month: int, day: int) -> int:

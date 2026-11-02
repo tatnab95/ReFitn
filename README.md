@@ -48,10 +48,10 @@
 Плагины уведомлений (`addons/NotificationSchedulerPlugin`, MIT, Godot Mobile Plugins, v6.0) и камеры (`addons/GodotGetImage`, MIT, Lamelynx, v0.2) собираются через Gradle. Поэтому в экспорте включён `gradle_build/use_gradle_build=true`, `plugins/NotificationSchedulerPlugin=true` и `plugins/GodotGetImage=true`. Для этого нужно один раз:
 
 1. `Project → Install Android Build Template` (создаст папку `android/build/`, она не хранится в git).
-2. Скопировать иконку уведомления: `android_res/drawable/ic_refitn_notification.xml` → `android/build/res/drawable/`.
+2. Иконка уведомления копируется при экспорте автоматически: `assets/NotificationSchedulerPlugin/android/drawable/ic_refitn_notification.xml` → `android/build/res/drawable/`. Вручную ничего копировать не нужно.
 3. Файлы `android/plugins/*.gdap` и `*.aar` обоих плагинов уже в репозитории. Ничего дополнительно скачивать или копировать не нужно.
 
-На Windows шаги те же, пути через `\`. Без шага 2 APK не соберётся (нет маленькой иконки для уведомления).
+На Windows шаги те же, пути через `\`. Иконка уведомления должна попасть в `android/build/res`, иначе Android молча не покажет уведомление.
 Лицензии плагинов: `addons/NotificationSchedulerPlugin/LICENSE.txt`, `addons/GodotGetImage/LICENSE.txt`.
 
 ### 2b. Настроить Android SDK

@@ -124,6 +124,7 @@ func _refresh() -> void:
 		totals[str(exercise.id)] = {"sets": 0, "reps": 0, "seconds": 0}
 
 	var period_has_data := false
+	var points_total := 0
 	for workout in Storage.workouts:
 		if typeof(workout) != TYPE_DICTIONARY:
 			continue
@@ -143,9 +144,14 @@ func _refresh() -> void:
 		total["reps"] = int(total["reps"]) + reps
 		total["seconds"] = int(total["seconds"]) + seconds
 		totals[exercise_id] = total
+		points_total += Storage.workout_points(workout)
 
 		if sets > 0 or reps > 0 or seconds > 0:
 			period_has_data = true
+
+	var points_label := _make_muted_label(Texts.t("stats_points_format") % points_total, 36)
+	points_label.add_theme_color_override("font_color", ThemeColors.GOLD)
+	exercise_stats.add_child(points_label)
 
 	if not period_has_data:
 		var empty_label := _make_muted_label(Texts.t("stats_empty_period"), 32)
@@ -326,7 +332,8 @@ func _on_export_selected(path: String) -> void:
 func _on_import_selected(path: String) -> void:
 	var added := Storage.import_workouts(path)
 	if added < 0:
-		_show_status(Texts.t("import_failed"), true)
+		var message := Texts.t("import_newer") if Storage.last_import_error == "newer_version" else Texts.t("import_failed")
+		_show_status(message, true)
 		return
 	_show_status(Texts.t("import_ok") % [
 		added, int(Storage.last_import_info.get("nutrition", 0))

@@ -11,8 +11,10 @@ const CHANNEL_ID := "refitn_main"
 const ICON_NAME := "ic_refitn_notification"
 const REST_ID := 1001
 const DAILY_ID := 1002
+const TEST_ID := 1003
 const DAY_SECONDS := 86400
 
+signal initialized
 signal permission_granted
 signal permission_denied
 
@@ -56,6 +58,35 @@ func open_settings() -> void:
 		_scheduler.open_app_info_settings()
 
 
+func has_exact_alarm_permission() -> bool:
+	return is_available() and _scheduler.has_schedule_exact_alarm_permission()
+
+
+func request_exact_alarm_permission() -> void:
+	if is_available():
+		_scheduler.request_schedule_exact_alarm_permission()
+
+
+func has_battery_exemption() -> bool:
+	return is_available() and _scheduler.has_battery_optimizations_permission()
+
+
+func request_battery_exemption() -> void:
+	if is_available():
+		_scheduler.request_battery_optimizations_permission()
+
+
+func schedule_test(seconds: int) -> bool:
+	if not has_permission():
+		return false
+	var data := NotificationData.new()
+	data.set_id(TEST_ID).set_channel_id(CHANNEL_ID)
+	data.set_title(Texts.t("notif_test_title")).set_content(Texts.t("notif_test_text"))
+	data.set_small_icon_name(ICON_NAME).set_delay(seconds)
+	_scheduler.schedule(data)
+	return true
+
+
 func schedule_rest(seconds: int) -> void:
 	cancel_rest()
 	if seconds <= 0 or not has_permission():
@@ -81,7 +112,7 @@ func refresh_daily() -> void:
 	var now := Time.get_datetime_dict_from_system()
 	var now_seconds := int(now.hour) * 3600 + int(now.minute) * 60 + int(now.second)
 	var delay := Storage.get_reminder_minutes() * 60 - now_seconds
-	var streak := Streak.calculate(Storage.workouts)
+	var streak := Streak.calculate(Storage.workouts, 0, Storage.rest_day_numbers())
 	if delay <= 0 or bool(streak.get("trained_today", false)):
 		delay += DAY_SECONDS
 	var current := int(streak.get("current", 0))
@@ -101,6 +132,7 @@ func _on_initialized() -> void:
 	channel.set_importance(NotificationChannel.Importance.HIGH)
 	_scheduler.create_notification_channel(channel)
 	refresh_daily()
+	initialized.emit()
 
 
 func _on_permission_granted(_permission_name: String) -> void:

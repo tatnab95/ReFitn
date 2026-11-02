@@ -5,6 +5,8 @@ const ThemeColors = preload("res://scripts/theme_colors.gd")
 const AiSettingsPanel = preload("res://scripts/ai_settings_panel.gd")
 const AppearancePanel = preload("res://scripts/appearance_panel.gd")
 const ReminderPanel = preload("res://scripts/reminder_panel.gd")
+const NotificationDiagnosticsPanel = preload("res://scripts/notification_diagnostics_panel.gd")
+const PlanSettingsPanel = preload("res://scripts/plan_settings_panel.gd")
 
 @onready var background: ColorRect = $Background
 @onready var back_button: Button = $Margin/MainVBox/Header/BackButton
@@ -32,6 +34,7 @@ const ReminderPanel = preload("res://scripts/reminder_panel.gd")
 @onready var status_label: Label = $Margin/MainVBox/Status
 
 var _ai_panel: Control = null
+var _plan_panel: Control = null
 
 
 func _ready() -> void:
@@ -69,6 +72,13 @@ func _ready() -> void:
 	var reminder := ReminderPanel.new()
 	content.add_child(reminder)
 	content.move_child(reminder, save_button.get_index())
+	var diagnostics := NotificationDiagnosticsPanel.new()
+	content.add_child(diagnostics)
+	content.move_child(diagnostics, save_button.get_index())
+	var plan_panel := PlanSettingsPanel.new()
+	content.add_child(plan_panel)
+	content.move_child(plan_panel, save_button.get_index())
+	_plan_panel = plan_panel
 	var ai_panel := AiSettingsPanel.new()
 	content.add_child(ai_panel)
 	content.move_child(ai_panel, save_button.get_index())
@@ -102,6 +112,8 @@ func _save_values(show_status: bool) -> void:
 	})
 	Storage.set_steps(_number(reps_step_input), _number(rest_step_input))
 	Storage.set_feedback(sound_check.button_pressed, vibration_check.button_pressed)
+	if _plan_panel != null:
+		_plan_panel.save_silent()
 	if _ai_panel != null and _ai_panel.has_method("save_silent"):
 		_ai_panel.save_silent()
 	if show_status:
