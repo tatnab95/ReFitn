@@ -7,6 +7,7 @@ const AppearancePanel = preload("res://scripts/appearance_panel.gd")
 const ReminderPanel = preload("res://scripts/reminder_panel.gd")
 const NotificationDiagnosticsPanel = preload("res://scripts/notification_diagnostics_panel.gd")
 const PlanSettingsPanel = preload("res://scripts/plan_settings_panel.gd")
+const MusicEntry = preload("res://scripts/music_entry.gd")
 
 @onready var background: ColorRect = $Background
 @onready var back_button: Button = $Margin/MainVBox/Header/BackButton
@@ -79,6 +80,9 @@ func _ready() -> void:
 	content.add_child(plan_panel)
 	content.move_child(plan_panel, save_button.get_index())
 	_plan_panel = plan_panel
+	var music := MusicEntry.new()
+	content.add_child(music)
+	content.move_child(music, save_button.get_index())
 	var ai_panel := AiSettingsPanel.new()
 	content.add_child(ai_panel)
 	content.move_child(ai_panel, save_button.get_index())

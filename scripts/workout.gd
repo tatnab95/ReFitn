@@ -5,6 +5,7 @@ const ThemeColors = preload("res://scripts/theme_colors.gd")
 const RestRing = preload("res://scripts/rest_ring.gd")
 const Measure = preload("res://scripts/measure.gd")
 const Streak = preload("res://scripts/streak.gd")
+const MusicWidget = preload("res://scripts/music_widget.gd")
 
 enum Phase { APPROACH, REST }
 
@@ -87,6 +88,7 @@ func _ready() -> void:
 
 	title_label.text = Texts.exercise_name(exercise_id)
 	_apply_texts()
+	_add_music_widget()
 	_setup_measure()
 	_style_screen()
 	_connect_signals()
@@ -472,7 +474,14 @@ func _save_progress() -> void:
 	})
 
 
+func _add_music_widget() -> void:
+	var main_vbox := $Margin/MainVBox as VBoxContainer
+	main_vbox.add_child(MusicWidget.new())
+	main_vbox.move_child(main_vbox.get_child(-1), 1)
+
+
 func _play_alert() -> void:
+	MusicPlayer.duck()
 	if Storage.get_sound_enabled():
 		beep_player.play()
 	if Storage.get_vibration_enabled():

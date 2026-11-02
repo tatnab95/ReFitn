@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 
 Storage="*res://scripts/storage.gd"
 Notifier="*res://scripts/notifier.gd"
+MusicPlayer="*res://scripts/music_player.gd"
 
 [display]
 
